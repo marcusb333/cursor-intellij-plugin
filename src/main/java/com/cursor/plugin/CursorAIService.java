@@ -97,7 +97,7 @@ public final class CursorAIService {
     
     String getApiKey() {
         // In a real implementation, this would read from IntelliJ settings
-        // For now, we'll use a environment variable
+        // For now, we'll use an environment variable
         var apiKey = System.getenv("CURSOR_API_KEY");
 
         return apiKey;
