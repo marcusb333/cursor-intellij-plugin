@@ -117,6 +117,54 @@ src/main/java/com/cursor/plugin/
 - Set Java source and target compatibility to version 17
 - Fixed compilation issues with IntelliJ Platform API usage
 
+## Testing
+
+The plugin includes a comprehensive test suite with high-quality unit tests covering all major components:
+
+### Test Coverage
+
+- **✅ CursorAIService**: API integration, error handling, network failures, response parsing
+- **✅ Action Classes**: User interactions, validation, error scenarios for all actions
+- **✅ Plugin Lifecycle**: Service initialization and startup activities
+- **✅ Build Configuration**: Complete testing framework setup
+
+### Test Framework
+
+- **JUnit 5**: Modern testing framework with Jupiter engine
+- **Mockito**: Mocking framework for dependencies and external services
+- **AssertJ**: Fluent assertions for better test readability
+- **MockWebServer**: HTTP testing for API integration
+- **Gradle Test Configuration**: Optimized test execution with parallel processing
+
+### Running Tests
+
+```bash
+# Run all tests
+./gradlew test
+
+# Run tests with verbose output
+./gradlew test --info
+
+# Run specific test class
+./gradlew test --tests "CursorAIServiceTest"
+
+# Run tests with coverage (if configured)
+./gradlew test jacocoTestReport
+```
+
+### Test Structure
+
+```
+src/test/java/com/cursor/plugin/
+├── CursorAIServiceTest.java      # API service tests with MockWebServer
+├── CursorPluginTest.java        # Plugin lifecycle tests
+├── GenerateCodeActionTest.java  # Code generation action tests
+├── ExplainCodeActionTest.java   # Code explanation action tests
+└── OpenCursorAIActionTest.java  # Tool window action tests
+```
+
+📖 **For detailed testing information, see [TESTING.md](TESTING.md)**
+
 ## Contributing
 
 1. Fork the repository

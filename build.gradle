@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.cursor'
-version '1.0.0'
+version '1.0.1'
 
 repositories {
     mavenCentral()
@@ -13,8 +13,16 @@ repositories {
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.google.code.gson:gson:2.10.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    
+    // Testing dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.10.1'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.8.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+    testImplementation 'org.assertj:assertj-core:3.25.1'
 }
 
 java {
@@ -23,7 +31,7 @@ java {
 }
 
 intellij {
-    version = '2023.2'
+    version = '2024.3'
     type = 'IC'
     plugins = ['com.intellij.java']
 }
@@ -41,4 +49,24 @@ patchPluginXml {
 
 test {
     useJUnitPlatform()
+    
+    // Test configuration
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = false
+    }
+    
+    // Set test timeout
+    timeout = Duration.ofMinutes(2)
+    
+    // Enable parallel execution
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    
+    // Test system properties
+    systemProperty 'test.api.key', 'test-api-key-12345'
+    systemProperty 'test.timeout.seconds', '30'
+    
+    // JVM arguments for tests
+    jvmArgs '-Xmx512m', '-XX:+UseG1GC'
 }
