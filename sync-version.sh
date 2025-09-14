@@ -49,11 +49,12 @@ update_version_in_file() {
         # Create backup
         cp "$file" "$file.bak"
         
-        # Update the file
-        sed -i.tmp "$pattern" "$file"
-        
-        # Remove temporary file
-        rm -f "$file.tmp"
+        # Update the file (portable sed -i)
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "$pattern" "$file"
+        else
+            sed -i "$pattern" "$file"
+        fi
         
         print_success "Updated $file"
     else
