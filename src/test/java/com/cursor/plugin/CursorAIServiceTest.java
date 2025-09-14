@@ -135,13 +135,12 @@ class CursorAIServiceTest {
 
         // Since we can't actually clear environment variables in Java, we need to test this differently
         // We'll create a custom service that doesn't find any API key
-        CursorAIService testService = new CursorAIService(mockProject, mockServer.url("/").toString()) {
-            @Override
-            public void sendMessage(String message, String context, CursorAIResponseCallback callback) {
-                // Override to simulate no API key scenario
-                callback.onError("API key not configured. Please set your Cursor API key in Settings.");
-            }
-        };
+        CursorAIService testService = org.mockito.Mockito.mock(CursorAIService.class);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            CursorAIService.CursorAIResponseCallback callback = invocation.getArgument(2);
+            callback.onError("API key not configured. Please set your Cursor API key in Settings.");
+            return null;
+        }).when(testService).sendMessage(org.mockito.Mockito.anyString(), org.mockito.Mockito.anyString(), org.mockito.Mockito.any(CursorAIService.CursorAIResponseCallback.class));
 
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<String> result = new AtomicReference<>();
