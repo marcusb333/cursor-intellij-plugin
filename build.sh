@@ -3,7 +3,7 @@
 # Cursor AI IntelliJ Plugin Build Script
 # This script provides common build operations for the plugin
 
-set -e  # Exit on any error
+set -Eeuo pipefail  # Strict mode: exit on error/undefined var, fail pipelines
 
 # Colors for output
 RED='\033[0;31m'
@@ -29,27 +29,35 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Wrapper for Gradle with common flags
+gradle_cmd() {
+    ./gradlew --stacktrace --no-daemon --warning-mode all "$@"
+}
+
 # Function to check prerequisites
 check_prerequisites() {
     print_status "Checking prerequisites..."
 
-    # Check Java version
+    # Check Java version (Gradle itself needs a JRE; toolchains will provision JDKs for compilation/tests)
     if command -v java &> /dev/null; then
-        JAVA_VERSION=$(java -version 2>&1 | head -n 1 | awk -F '"' '{print $2}' | cut -d'.' -f1)
-        if [ "$JAVA_VERSION" -ge 17 ]; then
-            print_success "Java $JAVA_VERSION found"
+        JAVA_VER_STR=$(java -version 2>&1 | head -n 1)
+        JAVA_VERSION=$(echo "$JAVA_VER_STR" | awk -F '"' '{print $2}' | cut -d'.' -f1)
+        if [[ -z "${JAVA_VERSION:-}" ]]; then
+            print_warning "Unable to parse Java version from: $JAVA_VER_STR"
+        elif [ "$JAVA_VERSION" -ge 11 ]; then
+            print_success "Java runtime detected: $JAVA_VER_STR"
         else
-            print_error "Java 17 or later required, found Java $JAVA_VERSION"
+            print_error "Java 11+ required to run Gradle, found: $JAVA_VER_STR"
             exit 1
         fi
     else
-        print_error "Java not found. Please install Java 17 or later"
-        exit 1
+        print_warning "Java runtime not found in PATH. If Gradle fails to start, install JDK 17 or 21."
     fi
 
     # Check Gradle wrapper
     if [ -f "./gradlew" ]; then
         print_success "Gradle wrapper found"
+        chmod +x ./gradlew || true
     else
         print_error "Gradle wrapper not found. Run from project root directory"
         exit 1
@@ -59,33 +67,56 @@ check_prerequisites() {
 # Function to clean build artifacts
 clean_build() {
     print_status "Cleaning build artifacts..."
-    ./gradlew clean
+    gradle_cmd clean
     print_success "Build artifacts cleaned"
 }
 
 # Function to run tests
 run_tests() {
+    local test_filter=${1:-}
     print_status "Running tests..."
-    ./gradlew test
-    print_success "All tests passed"
 
-    # Show test report location
-    if [ -f "build/reports/tests/test/index.html" ]; then
-        print_status "Test report available at: build/reports/tests/test/index.html"
+    # Ensure toolchain auto-download is enabled for CI/local
+    export ORG_GRADLE_PROJECT_org__gradle__java__installations__auto_download=true
+
+    # Clean previous results to avoid stale reports
+    gradle_cmd cleanTest
+
+    # Build arguments
+    local args=(test)
+    if [[ -n "$test_filter" ]]; then
+        print_status "Filtering tests with pattern: $test_filter"
+        args+=("--tests" "$test_filter")
+    fi
+
+    # Run tests
+    if gradle_cmd "${args[@]}"; then
+        print_success "All tests passed"
+        local report_html="build/reports/tests/test/index.html"
+        if [ -f "$report_html" ]; then
+            print_status "Test report: $report_html"
+        fi
+    else
+        print_error "Tests failed"
+        local report_html="build/reports/tests/test/index.html"
+        if [ -f "$report_html" ]; then
+            print_status "Test report: $report_html"
+        fi
+        exit 1
     fi
 }
 
 # Function to build the plugin
 build_plugin() {
     print_status "Building plugin..."
-    ./gradlew build
+    gradle_cmd build
     print_success "Plugin built successfully"
 
     # Extract version from plugin.xml
-    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
-    
+    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g' || true)
+
     # Show build artifacts
-    if [ -f "build/libs/cursor-intellij-plugin-${PLUGIN_VERSION}.jar" ]; then
+    if [ -n "${PLUGIN_VERSION:-}" ] && [ -f "build/libs/cursor-intellij-plugin-${PLUGIN_VERSION}.jar" ]; then
         print_status "Plugin JAR: build/libs/cursor-intellij-plugin-${PLUGIN_VERSION}.jar"
     fi
 }
@@ -93,14 +124,14 @@ build_plugin() {
 # Function to create distributable plugin
 build_distribution() {
     print_status "Creating plugin distribution..."
-    ./gradlew buildPlugin
+    gradle_cmd buildPlugin
     print_success "Plugin distribution created"
 
     # Extract version from plugin.xml
-    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
-    
+    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g' || true)
+
     # Show distribution location
-    if [ -f "build/distributions/cursor-intellij-plugin-${PLUGIN_VERSION}.zip" ]; then
+    if [ -n "${PLUGIN_VERSION:-}" ] && [ -f "build/distributions/cursor-intellij-plugin-${PLUGIN_VERSION}.zip" ]; then
         print_status "Distribution ZIP: build/distributions/cursor-intellij-plugin-${PLUGIN_VERSION}.zip"
     fi
 }
@@ -110,22 +141,20 @@ run_ide() {
     print_status "Starting development IDE..."
     print_warning "This will start IntelliJ IDEA with the plugin loaded"
     print_warning "Press Ctrl+C to stop the IDE"
-    ./gradlew runIde
+    gradle_cmd runIde
 }
 
 # Function to verify plugin
 verify_plugin() {
     print_status "Verifying plugin..."
-    ./gradlew verifyPlugin
+    gradle_cmd verifyPlugin
     print_success "Plugin verification completed"
 }
 
 # Function to check for API key
 check_api_key() {
-    if [ -n "$CURSOR_API_KEY" ]; then
+    if [ -n "${CURSOR_API_KEY:-}" ]; then
         print_success "CURSOR_API_KEY environment variable is set"
-    elif [ -n "$(java -Dcursor.api.key=test -version 2>&1 | grep 'cursor.api.key')" ]; then
-        print_success "cursor.api.key system property detected"
     else
         print_warning "No API key configured. Set CURSOR_API_KEY environment variable or cursor.api.key system property"
         print_status "Example: export CURSOR_API_KEY=your_api_key_here"
@@ -134,59 +163,64 @@ check_api_key() {
 
 # Function to show usage
 show_usage() {
-    echo "Cursor AI IntelliJ Plugin Build Script"
-    echo ""
-    echo "Usage: $0 [command]"
-    echo ""
-    echo "Commands:"
-    echo "  check       - Check prerequisites and configuration"
-    echo "  clean       - Clean build artifacts"
-    echo "  test        - Run all tests"
-    echo "  build       - Build the plugin"
-    echo "  dist        - Create plugin distribution"
-    echo "  run         - Run plugin in development IDE"
-    echo "  verify      - Verify plugin structure"
-    echo "  all         - Run clean, test, build, and dist"
-    echo "  help        - Show this help message"
-    echo ""
-    echo "Examples:"
-    echo "  $0 all      - Complete build pipeline"
-    echo "  $0 test     - Run tests only"
-    echo "  $0 run      - Start development IDE"
+    cat <<EOF
+Cursor AI IntelliJ Plugin Build Script
+
+Usage: $0 [command] [options]
+
+Commands:
+  check                 Check prerequisites and configuration
+  clean                 Clean build artifacts
+  test [pattern]        Run tests (optionally filter with --tests pattern)
+  build                 Build the plugin
+  dist                  Create plugin distribution
+  run                   Run plugin in development IDE
+  verify                Verify plugin structure
+  all                   Run clean, test, build, and dist
+  help                  Show this help message
+
+Examples:
+  $0 all
+  $0 test
+  $0 test com.cursor.*
+  $0 run
+EOF
 }
 
 # Main script logic
-case "${1:-help}" in
-    "check")
+cmd="${1:-help}"
+shift || true
+case "$cmd" in
+    check)
         check_prerequisites
         check_api_key
         ;;
-    "clean")
+    clean)
         check_prerequisites
         clean_build
         ;;
-    "test")
+    test)
         check_prerequisites
-        run_tests
+        run_tests "${1:-}"
         ;;
-    "build")
+    build)
         check_prerequisites
         build_plugin
         ;;
-    "dist")
+    dist)
         check_prerequisites
         build_distribution
         ;;
-    "run")
+    run)
         check_prerequisites
         check_api_key
         run_ide
         ;;
-    "verify")
+    verify)
         check_prerequisites
         verify_plugin
         ;;
-    "all")
+    all)
         check_prerequisites
         check_api_key
         clean_build
@@ -195,7 +229,7 @@ case "${1:-help}" in
         build_distribution
         print_success "Complete build pipeline finished successfully!"
         ;;
-    "help"|*)
+    help|*)
         show_usage
         ;;
 esac
