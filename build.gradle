@@ -1,22 +1,34 @@
+import java.time.Duration
+
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.17.4'
+    id 'org.jetbrains.intellij.platform' version '2.9.0'
 }
 
 group 'com.cursor'
-version '1.0.3'
+version '0.0.4'
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity('2024.3')
+        bundledPlugin('com.intellij.java')
+        instrumentationTools()
+    }
+
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.google.code.gson:gson:2.10.1'
-    
+
     // Testing dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.1'
     testImplementation 'org.junit.platform:junit-platform-suite-api:1.10.1'
     testImplementation 'org.mockito:mockito-core:5.8.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.8.0'
@@ -26,31 +38,28 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
-intellij {
-    version = '2024.3'
-    type = 'IC'
-    plugins = ['com.intellij.java']
-
-    // Configure for future compatibility
-    updateSinceUntilBuild = false
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = '243'
+            untilBuild = provider { null }
+        }
+    }
 }
 
 patchPluginXml {
-    // Set compatibility range to support current and all future versions
-    sinceBuild = '243'  // IntelliJ IDEA 2024.3
-    untilBuild = null   // No upper limit - compatible with all future versions
-
     changeNotes = """
       Version 1.0.3 - Enhanced Future Compatibility:
       - Updated for compatibility with all future IntelliJ IDEA versions
       - Removed version upper limits to ensure forward compatibility
       - Enhanced stability and performance
       - Supports IntelliJ IDEA 2024.3 and all newer versions
-      
+
       Previous versions:
       - v1.0.2: Updated for IntelliJ IDEA 2024.3+ compatibility
       - v1.0.0: Initial release with basic chatbot integration
@@ -59,24 +68,18 @@ patchPluginXml {
 
 test {
     useJUnitPlatform()
-    
-    // Test configuration
+
     testLogging {
         events "passed", "skipped", "failed"
         exceptionFormat "full"
         showStandardStreams = false
     }
-    
-    // Set test timeout
+
     timeout = Duration.ofMinutes(2)
-    
-    // Enable parallel execution
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    
-    // Test system properties
+
     systemProperty 'test.api.key', 'test-api-key-12345'
     systemProperty 'test.timeout.seconds', '30'
-    
-    // JVM arguments for tests
+
     jvmArgs '-Xmx512m', '-XX:+UseG1GC'
 }

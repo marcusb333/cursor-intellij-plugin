@@ -2,7 +2,7 @@
     <id>com.cursor.plugin</id>
     <name>Cursor AI Assistant</name>
     <vendor email="support@cursor.com" url="https://cursor.com">Cursor</vendor>
-    <version>1.0.3</version>
+    <version>0.0.4</version>
 
     <!-- Compatibility with all IntelliJ IDEA versions from 2024.3 onwards -->
     <idea-version since-build="243"/>
