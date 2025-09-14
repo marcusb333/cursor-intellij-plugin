@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '1.15.0'
+}
+
+group 'com.cursor'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+}
+
+intellij {
+    version = '2023.2'
+    type = 'IC'
+    plugins = ['com.intellij.java']
+}
+
+patchPluginXml {
+    changeNotes = """
+      Initial release of Cursor Chatbot Plugin for IntelliJ IDEA.
+      Features:
+      - Integrated Cursor AI chatbot
+      - Code assistance and suggestions
+      - Natural language code generation
+      - Context-aware responses
+    """
+}
+
+test {
+    useJUnitPlatform()
+}
