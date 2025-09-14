@@ -129,6 +129,17 @@ The plugin requires a Cursor API key to function. You can set it in one of these
 
 ## Development
 
+### Version Management
+
+This project uses centralized version management. The version is defined in `src/main/resources/META-INF/plugin.xml` and automatically synchronized across all files using the `sync-version.sh` script.
+
+To update the version:
+1. Edit the version in `plugin.xml`
+2. Run `./sync-version.sh`
+3. Build and test with `./gradlew clean build`
+
+See [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md) for detailed information.
+
 ### Project Structure
 
 ```
