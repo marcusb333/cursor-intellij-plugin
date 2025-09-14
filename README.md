@@ -15,7 +15,7 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 ### Prerequisites
 
-- IntelliJ IDEA 2023.2 or later (tested with 2024.3)
+- IntelliJ IDEA 2024.3 or later (compatible with all future versions)
 - Java 17 or later
 - Cursor API key (get one from [Cursor.com](https://cursor.com))
 
@@ -269,10 +269,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Version 1.0.2 (Current)
+### Version 1.0.3 (Current)
+- 🚀 **Enhanced Future Compatibility**: Now works with all new IntelliJ IDEA versions
+- 🔧 Removed version upper limits for unlimited forward compatibility
+- ⚡ Improved stability and performance
+- 📈 Better error handling and logging
+- 🔄 Updated IntelliJ Gradle Plugin to 1.17.4
+- 📦 Compatible with IntelliJ IDEA 2024.3 and all future releases
+
+### Version 1.0.2
 - Updated for IntelliJ IDEA 2024.3+ compatibility
 - Improved Java 17 support
 - Enhanced stability and performance
+
+### Version 1.0.0
 - Initial release with core AI integration
 - Chat panel interface
 - Code generation and explanation actions

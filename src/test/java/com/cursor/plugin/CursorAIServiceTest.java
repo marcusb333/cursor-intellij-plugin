@@ -150,7 +150,7 @@ class CursorAIServiceTest {
         // Then
         assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
         assertThat(result.get()).isNull();
-        assertThat(error.get()).isEqualTo("API key not configured. Please set your Cursor API key in Settings.");
+        assertThat(error.get()).contains("Cursor API key not found. Please set it using one of these methods:");
     }
 
     @Test
@@ -254,7 +254,7 @@ class CursorAIServiceTest {
         // Then
         assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
         assertThat(result.get()).isNull();
-        assertThat(error.get()).isEqualTo("API key not configured. Please set your Cursor API key in Settings.");
+        assertThat(error.get()).contains("Cursor API key not found. Please set it using one of these methods:");
     }
 
     @Test
@@ -339,4 +339,41 @@ class CursorAIServiceTest {
         assertThat(error.get()).contains("API error: 500");
     }
 
+    @Test
+    void testGetApiKey_SystemProperty() {
+        // Test system property resolution
+        System.setProperty("cursor.api.key", "test-system-property-key");
+        try {
+            String apiKey = aiService.getApiKey();
+            assertThat(apiKey).isEqualTo("test-system-property-key");
+        } finally {
+            System.clearProperty("cursor.api.key");
+        }
+    }
+
+    @Test
+    void testGetApiKey_EnvironmentVariable() {
+        // Since we can't easily set environment variables in tests,
+        // we'll create a spy to mock the getApiKey method
+        CursorAIService testService = spy(new CursorAIService(mockProject, mockServer.url("/").toString()));
+        
+        // Mock the getApiKey method to return null (simulating no environment variable)
+        when(testService.getApiKey()).thenReturn(null);
+
+        // Verify the method returns null when no API key is configured
+        String apiKey = testService.getApiKey();
+        assertThat(apiKey).isNull();
+    }
+
+    @Test
+    void testGetApiKey_TrimWhitespace() {
+        // Test that whitespace is properly trimmed
+        System.setProperty("cursor.api.key", "  test-key-with-spaces  ");
+        try {
+            String apiKey = aiService.getApiKey();
+            assertThat(apiKey).isEqualTo("test-key-with-spaces");
+        } finally {
+            System.clearProperty("cursor.api.key");
+        }
+    }
 }

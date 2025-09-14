@@ -41,10 +41,18 @@ public final class CursorAIService {
     public void sendMessage(String message, String context, CursorAIResponseCallback callback) {
         String apiKey = getApiKey();
         if (apiKey == null || apiKey.isEmpty()) {
-            callback.onError("API key not configured. Please set your Cursor API key in Settings.");
+            String errorMessage = "Cursor API key not found. Please set it using one of these methods:\n" +
+                    "1. System property: -Dcursor.api.key=your_key_here\n" +
+                    "2. Environment variable: CURSOR_API_KEY=your_key_here\n" +
+                    "3. Environment variable: cursor_api_key=your_key_here\n\n" +
+                    "For more details, see the plugin documentation.";
+            callback.onError(errorMessage);
             return;
         }
         
+        // Log API key status for debugging (without exposing the actual key)
+        System.out.println("Cursor Plugin: API key found (length: " + apiKey.length() + " characters)");
+
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("model", "gpt-4");
         requestBody.addProperty("prompt", message);
@@ -96,11 +104,31 @@ public final class CursorAIService {
     }
     
     String getApiKey() {
-        // In a real implementation, this would read from IntelliJ settings
-        // For now, we'll use an environment variable
-        String apiKey = System.getenv("CURSOR_API_KEY");
+        // Try multiple sources for the API key, in order of preference:
 
-        return apiKey;
+        // 1. System property (e.g., -Dcursor.api.key=xxx)
+        String apiKey = System.getProperty("cursor.api.key");
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
+            return apiKey.trim();
+        }
+
+        // 2. Environment variable CURSOR_API_KEY
+        apiKey = System.getenv("CURSOR_API_KEY");
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
+            return apiKey.trim();
+        }
+
+        // 3. Alternative environment variable (lowercase)
+        apiKey = System.getenv("cursor_api_key");
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
+            return apiKey.trim();
+        }
+
+        // 4. TODO: Future implementation - read from IntelliJ settings
+        // This would be where we'd read from the plugin's settings panel
+        // when that feature is implemented
+
+        return null; // No API key found
     }
     
     public interface CursorAIResponseCallback {
