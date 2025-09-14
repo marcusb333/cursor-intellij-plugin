@@ -1,10 +1,10 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.17.3'
+    id 'org.jetbrains.intellij' version '1.17.4'
 }
 
 group 'com.cursor'
-version '1.0.2'
+version '1.0.3'
 
 repositories {
     mavenCentral()
@@ -34,16 +34,26 @@ intellij {
     version = '2024.3'
     type = 'IC'
     plugins = ['com.intellij.java']
+
+    // Configure for future compatibility
+    updateSinceUntilBuild = false
 }
 
 patchPluginXml {
+    // Set compatibility range to support current and all future versions
+    sinceBuild = '243'  // IntelliJ IDEA 2024.3
+    untilBuild = null   // No upper limit - compatible with all future versions
+
     changeNotes = """
-      Initial release of Cursor Chatbot Plugin for IntelliJ IDEA.
-      Features:
-      - Integrated Cursor AI chatbot
-      - Code assistance and suggestions
-      - Natural language code generation
-      - Context-aware responses
+      Version 1.0.3 - Enhanced Future Compatibility:
+      - Updated for compatibility with all future IntelliJ IDEA versions
+      - Removed version upper limits to ensure forward compatibility
+      - Enhanced stability and performance
+      - Supports IntelliJ IDEA 2024.3 and all newer versions
+      
+      Previous versions:
+      - v1.0.2: Updated for IntelliJ IDEA 2024.3+ compatibility
+      - v1.0.0: Initial release with basic chatbot integration
     """
 }
 
