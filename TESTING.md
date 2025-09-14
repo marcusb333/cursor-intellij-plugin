@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 17 tests achieving 100% pass rate.
+This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 20 tests achieving 100% pass rate.
 
 ## Test Architecture
 
@@ -31,8 +31,11 @@ src/test/java/com/cursor/plugin/
 - ✅ Service instance creation and retrieval
 - ✅ API communication with valid credentials
 - ✅ Error handling for missing API keys
-- ✅ Network error handling
+- ✅ Error handling for empty API keys
+- ✅ Network error handling (401, 500 errors)
 - ✅ Malformed response parsing
+- ✅ Empty response handling
+- ✅ Server error scenarios
 
 **Action Tests** - UI action functionality
 - ✅ Context menu action registration
@@ -75,9 +78,10 @@ Tests can be run directly from IntelliJ IDEA:
 ### Environment Setup
 
 Tests automatically handle:
-- API key configuration via system properties
+- API key configuration via Mockito spies (no environment variable manipulation)
 - Mock server initialization and cleanup
 - Resource management (HTTP clients, connections)
+- Proper test isolation between test cases
 
 ### Test Properties
 
@@ -123,6 +127,21 @@ Located in `src/test/resources/test.properties`:
 - **Setup**: Mock server returns invalid JSON
 - **Assertions**: Parse error is caught and reported to user
 
+#### testSendMessageWithEmptyApiKey()
+- **Purpose**: Test handling of empty string API keys
+- **Setup**: Mock getApiKey() to return empty string
+- **Assertions**: Error callback triggered with appropriate message
+
+#### testSendMessageWithEmptyResponse()
+- **Purpose**: Validate handling of empty response content
+- **Setup**: Mock server returns valid JSON with empty content
+- **Assertions**: Empty response is handled gracefully
+
+#### testSendMessageWithServerError()
+- **Purpose**: Test handling of server errors (500, etc.)
+- **Setup**: Mock server returns 500 Internal Server Error
+- **Assertions**: Server error is caught and reported to user
+
 ### Action Tests
 
 #### Context Menu Integration
@@ -134,6 +153,35 @@ Located in `src/test/resources/test.properties`:
 - Network connectivity issues
 - API authentication failures
 - Invalid code selections
+
+## Improved Testing Approach
+
+### API Key Testing Strategy
+
+The tests now use Mockito spies instead of environment variable manipulation to avoid `UnsupportedOperationException` when trying to modify `System.getenv()`:
+
+```java
+@BeforeEach
+void setUp() throws Exception {
+    mockServer = new MockWebServer();
+    mockServer.start();
+    aiService = new CursorAIService(mockProject, mockServer.url("/").toString());
+    spyService = spy(aiService);  // Create spy for mocking
+}
+
+@Test
+void testSendMessageWithValidApiKey() {
+    // Given
+    when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
+    // ... rest of test
+}
+```
+
+### Benefits of Spy Approach
+- **No Environment Variable Manipulation**: Avoids Java's unmodifiable environment map
+- **Better Test Isolation**: Each test can independently control API key behavior
+- **Cleaner Setup**: No need to restore environment variables in tearDown
+- **More Reliable**: Tests don't depend on external environment state
 
 ## Mock Server Testing
 
@@ -307,9 +355,9 @@ System.out.println("Request: " + mockServer.takeRequest());
 
 ## Test Coverage Goals
 
-- **Line Coverage**: > 80%
-- **Branch Coverage**: > 75%
-- **Method Coverage**: > 90%
+- **Line Coverage**: > 85% (improved with additional test cases)
+- **Branch Coverage**: > 80% (improved with edge case testing)
+- **Method Coverage**: > 95% (comprehensive API key scenarios)
 
 ### Generating Coverage Reports
 

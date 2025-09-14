@@ -95,13 +95,11 @@ public final class CursorAIService {
         });
     }
     
-    private String getApiKey() {
+    String getApiKey() {
         // In a real implementation, this would read from IntelliJ settings
-        // For now, we'll use a system property or environment variable
-        String apiKey = System.getProperty(API_KEY_PROPERTY);
-        if (apiKey == null) {
-            apiKey = System.getenv("CURSOR_API_KEY");
-        }
+        // For now, we'll use a environment variable
+        var apiKey = System.getenv("CURSOR_API_KEY");
+
         return apiKey;
     }
     

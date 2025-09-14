@@ -45,8 +45,6 @@ patchPluginXml {
       - Natural language code generation
       - Context-aware responses
     """
-    sinceBuild = "232.0"
-    untilBuild = "999.*"
 }
 
 test {

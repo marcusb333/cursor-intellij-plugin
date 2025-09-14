@@ -19,39 +19,33 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.spy;
 
 @ExtendWith(MockitoExtension.class)
 class CursorAIServiceTest {
 
+    public static final String CURSOR_API_KEY = "CURSOR_API_KEY";
+    public static final String TEST_API_KEY = "test-api-key";
     @Mock
     private Project mockProject;
 
     private MockWebServer mockServer;
     private CursorAIService aiService;
-    private String originalApiKey;
+    private CursorAIService spyService;
 
     @BeforeEach
     void setUp() throws Exception {
-        // Store original API key values
-        originalApiKey = System.getProperty("cursor.api.key");
-
         // Set up mock server
         mockServer = new MockWebServer();
         mockServer.start();
         // Create service instance with mock server URL
         aiService = new CursorAIService(mockProject, mockServer.url("/").toString());
+        // Create spy for mocking getApiKey method
+        spyService = spy(aiService);
     }
 
     @AfterEach
     void tearDown() {
-        // Restore original API key
-        if (originalApiKey != null) {
-            System.setProperty("cursor.api.key", originalApiKey);
-        } else {
-            System.clearProperty("cursor.api.key");
-        }
-        
-
         // Clean up mock server
         if (mockServer != null) {
             try {
@@ -78,8 +72,7 @@ class CursorAIServiceTest {
     @Test
     void testSendMessageWithValidApiKey() throws InterruptedException {
         // Given
-        System.setProperty("cursor.api.key", "test-api-key");
-        
+        when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
         String expectedResponse = "This is a test response";
         JsonObject responseJson = new JsonObject();
         JsonObject choice = new JsonObject();
@@ -114,7 +107,7 @@ class CursorAIServiceTest {
         };
 
         // When
-        aiService.sendMessage("Test message", "Test context", callback);
+        spyService.sendMessage("Test message", "Test context", callback);
 
         // Then
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
@@ -130,17 +123,8 @@ class CursorAIServiceTest {
 
     @Test
     void testSendMessageWithMissingApiKey() throws InterruptedException {
-        // Given - Clear both system property and ensure no environment variable interference
-        System.clearProperty("cursor.api.key");
-
-        // Since we can't actually clear environment variables in Java, we need to test this differently
-        // We'll create a custom service that doesn't find any API key
-        CursorAIService testService = org.mockito.Mockito.mock(CursorAIService.class);
-        org.mockito.Mockito.doAnswer(invocation -> {
-            CursorAIService.CursorAIResponseCallback callback = invocation.getArgument(2);
-            callback.onError("API key not configured. Please set your Cursor API key in Settings.");
-            return null;
-        }).when(testService).sendMessage(org.mockito.Mockito.anyString(), org.mockito.Mockito.anyString(), org.mockito.Mockito.any(CursorAIService.CursorAIResponseCallback.class));
+        // Given - Mock getApiKey to return null
+        when(spyService.getApiKey()).thenReturn(null);
 
         CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<String> result = new AtomicReference<>();
@@ -161,7 +145,7 @@ class CursorAIServiceTest {
         };
 
         // When
-        testService.sendMessage("Test message", "Test context", callback);
+        spyService.sendMessage("Test message", "Test context", callback);
 
         // Then
         assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
@@ -172,7 +156,7 @@ class CursorAIServiceTest {
     @Test
     void testSendMessageWithApiError() throws InterruptedException {
         // Given
-        System.setProperty("cursor.api.key", "test-api-key");
+        when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
         
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(401)
@@ -197,7 +181,7 @@ class CursorAIServiceTest {
         };
 
         // When
-        aiService.sendMessage("Test message", "Test context", callback);
+        spyService.sendMessage("Test message", "Test context", callback);
 
         // Then
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
@@ -208,7 +192,7 @@ class CursorAIServiceTest {
     @Test
     void testSendMessageWithMalformedResponse() throws InterruptedException {
         // Given
-        System.setProperty("cursor.api.key", "test-api-key");
+        when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
         
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(200)
@@ -233,12 +217,126 @@ class CursorAIServiceTest {
         };
 
         // When
-        aiService.sendMessage("Test message", "Test context", callback);
+        spyService.sendMessage("Test message", "Test context", callback);
 
         // Then
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
         assertThat(result.get()).isNull();
         assertThat(error.get()).contains("Failed to parse response:");
+    }
+
+    @Test
+    void testSendMessageWithEmptyApiKey() throws InterruptedException {
+        // Given - Mock getApiKey to return empty string
+        when(spyService.getApiKey()).thenReturn("");
+
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<String> result = new AtomicReference<>();
+        AtomicReference<String> error = new AtomicReference<>();
+
+        CursorAIService.CursorAIResponseCallback callback = new CursorAIService.CursorAIResponseCallback() {
+            @Override
+            public void onSuccess(String response) {
+                result.set(response);
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                error.set(errorMessage);
+                latch.countDown();
+            }
+        };
+
+        // When
+        spyService.sendMessage("Test message", "Test context", callback);
+
+        // Then
+        assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(result.get()).isNull();
+        assertThat(error.get()).isEqualTo("API key not configured. Please set your Cursor API key in Settings.");
+    }
+
+    @Test
+    void testSendMessageWithEmptyResponse() throws InterruptedException {
+        // Given
+        when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
+        
+        JsonObject responseJson = new JsonObject();
+        JsonObject choice = new JsonObject();
+        JsonObject message = new JsonObject();
+        message.addProperty("content", "");
+        choice.add("message", message);
+        com.google.gson.JsonArray choicesArray = new com.google.gson.JsonArray();
+        choicesArray.add(choice);
+        responseJson.add("choices", choicesArray);
+        
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setBody(responseJson.toString())
+                .addHeader("Content-Type", "application/json"));
+
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<String> result = new AtomicReference<>();
+        AtomicReference<String> error = new AtomicReference<>();
+
+        CursorAIService.CursorAIResponseCallback callback = new CursorAIService.CursorAIResponseCallback() {
+            @Override
+            public void onSuccess(String response) {
+                result.set(response);
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                error.set(errorMessage);
+                latch.countDown();
+            }
+        };
+
+        // When
+        spyService.sendMessage("Test message", "Test context", callback);
+
+        // Then
+        assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(result.get()).isEqualTo("");
+        assertThat(error.get()).isNull();
+    }
+
+    @Test
+    void testSendMessageWithServerError() throws InterruptedException {
+        // Given
+        when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
+        
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(500)
+                .setBody("Internal Server Error"));
+
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<String> result = new AtomicReference<>();
+        AtomicReference<String> error = new AtomicReference<>();
+
+        CursorAIService.CursorAIResponseCallback callback = new CursorAIService.CursorAIResponseCallback() {
+            @Override
+            public void onSuccess(String response) {
+                result.set(response);
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                error.set(errorMessage);
+                latch.countDown();
+            }
+        };
+
+        // When
+        spyService.sendMessage("Test message", "Test context", callback);
+
+        // Then
+        assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(result.get()).isNull();
+        assertThat(error.get()).contains("API error: 500");
     }
 
 }

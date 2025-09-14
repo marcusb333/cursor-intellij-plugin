@@ -41,7 +41,7 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 - ✅ Keyboard shortcuts support
 
 ### Developer Experience
-- ✅ Comprehensive unit test suite (17 tests, 100% pass rate)
+- ✅ Comprehensive unit test suite (20 tests, 100% pass rate)
 - ✅ Mock server testing for API integration
 - ✅ Error handling for network issues and API errors
 - ✅ Debug logging capabilities
@@ -99,13 +99,14 @@ cursor-intellij-plugin/
 ## Testing Strategy
 
 ### Test Coverage
-- **Total Tests**: 17 tests across 4 test classes
+- **Total Tests**: 20 tests across 4 test classes
 - **Success Rate**: 100% passing
 - **Coverage Areas**:
-  - API service functionality
-  - Error handling scenarios
-  - Action implementations
+  - API service functionality (8 tests)
+  - Error handling scenarios (comprehensive edge cases)
+  - Action implementations (12 tests)
   - Mock server integration
+  - API key validation (null, empty, valid scenarios)
 
 ### Testing Tools
 - **JUnit 5**: Test framework
