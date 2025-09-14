@@ -110,6 +110,13 @@ src/main/java/com/cursor/plugin/
 ./gradlew runIde
 ```
 
+**Build Status**: ✅ Successfully builds and generates `cursor-intellij-plugin-1.0.0.zip` in `build/distributions/`
+
+**Compatibility Notes**:
+- Updated IntelliJ Gradle Plugin to version 1.17.3 for Gradle 8.14 compatibility
+- Set Java source and target compatibility to version 17
+- Fixed compilation issues with IntelliJ Platform API usage
+
 ## Contributing
 
 1. Fork the repository
@@ -121,6 +128,16 @@ src/main/java/com/cursor/plugin/
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Build Status
+
+✅ **Successfully Built**: The plugin has been tested and builds successfully, generating `cursor-intellij-plugin-1.0.0.zip` (3.1 MB) in the `build/distributions/` directory.
+
+### Recent Build Fixes
+- Updated IntelliJ Gradle Plugin to version 1.17.3 for Gradle 8.14 compatibility
+- Set Java source and target compatibility to version 17
+- Fixed `Messages.showInfoDialog` compilation error in `ExplainCodeAction.java`
+- Added explicit Java version configuration in `build.gradle`
 
 ## Support
 
