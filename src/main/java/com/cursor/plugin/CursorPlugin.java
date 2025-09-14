@@ -6,7 +6,7 @@ import com.intellij.openapi.startup.StartupActivity;
 import org.jetbrains.annotations.NotNull;
 
 @Service
-public final class CursorPlugin implements StartupActivity {
+public class CursorPlugin implements StartupActivity {
     
     @Override
     public void runActivity(@NotNull Project project) {

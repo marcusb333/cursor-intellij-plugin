@@ -27,6 +27,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+    <h3>Version 1.0.1</h3>
+    <ul>
+        <li>Updated for IntelliJ IDEA 2024.3+ compatibility</li>
+        <li>Improved Java 17 support</li>
+        <li>Enhanced stability and performance</li>
+    </ul>
     <h3>Version 1.0.0</h3>
     <ul>
         <li>Initial release</li>

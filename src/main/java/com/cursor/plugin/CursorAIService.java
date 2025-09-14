@@ -9,16 +9,23 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public final class CursorAIService {
+public class CursorAIService {
     private static final String CURSOR_API_URL = "https://api.cursor.com/v1/chat/completions";
     private static final String API_KEY_PROPERTY = "cursor.api.key";
     
     private final Project project;
     private final OkHttpClient httpClient;
     private final Gson gson;
+    private final String apiUrl;
     
     public CursorAIService(Project project) {
+        this(project, CURSOR_API_URL);
+    }
+    
+    // Package-private constructor for testing
+    CursorAIService(Project project, String apiUrl) {
         this.project = project;
+        this.apiUrl = apiUrl;
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
@@ -51,7 +58,7 @@ public final class CursorAIService {
         );
         
         Request request = new Request.Builder()
-                .url(CURSOR_API_URL)
+                .url(apiUrl)
                 .addHeader("Authorization", "Bearer " + apiKey)
                 .addHeader("Content-Type", "application/json")
                 .post(body)
@@ -73,8 +80,7 @@ public final class CursorAIService {
                 try {
                     String responseBody = response.body().string();
                     JsonObject jsonResponse = gson.fromJson(responseBody, JsonObject.class);
-                    String content = jsonResponse.getAsJsonObject("choices")
-                            .getAsJsonArray("choices")
+                    String content = jsonResponse.getAsJsonArray("choices")
                             .get(0)
                             .getAsJsonObject()
                             .getAsJsonObject("message")
