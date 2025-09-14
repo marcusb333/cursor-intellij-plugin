@@ -15,13 +15,18 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 ### Prerequisites
 
-- IntelliJ IDEA 2023.2 or later
-- Java 11 or later
+- IntelliJ IDEA 2023.2 or later (tested with 2024.3)
+- Java 17 or later
 - Cursor API key (get one from [Cursor.com](https://cursor.com))
 
 ### Building from Source
 
-1. Clone this repository
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/your-username/cursor-intellij-plugin.git
+   cd cursor-intellij-plugin
+   ```
+
 2. Set your Cursor API key as an environment variable:
    ```bash
    export CURSOR_API_KEY=your_api_key_here
@@ -31,7 +36,12 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    -Dcursor.api.key=your_api_key_here
    ```
 
-3. Build the plugin:
+3. Build the plugin using the build script (recommended):
+   ```bash
+   ./build.sh all
+   ```
+   
+   Or use Gradle directly:
    ```bash
    ./gradlew buildPlugin
    ```
@@ -40,6 +50,41 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    - Go to File → Settings → Plugins
    - Click the gear icon → Install Plugin from Disk
    - Select the generated `.zip` file from `build/distributions/`
+
+### Build Script Commands
+
+The project includes a comprehensive build script (`build.sh`) that provides the following commands:
+
+```bash
+# Check prerequisites and configuration
+./build.sh check
+
+# Clean build artifacts
+./build.sh clean
+
+# Run all tests
+./build.sh test
+
+# Build the plugin JAR
+./build.sh build
+
+# Create distributable plugin ZIP
+./build.sh dist
+
+# Run plugin in development IDE
+./build.sh run
+
+# Verify plugin structure and configuration
+./build.sh verify
+
+# Complete build pipeline (clean, test, build, dist)
+./build.sh all
+
+# Show help and available commands
+./build.sh help
+```
+
+The build script provides colored output, error checking, and will verify that you have the correct Java version (17+) and Gradle wrapper before running any commands.
 
 ## Usage
 
@@ -97,103 +142,131 @@ src/main/java/com/cursor/plugin/
 └── ExplainCodeAction.java         # Code explanation action
 ```
 
-### Building
+### Building and Testing
 
+1. **Build the plugin**:
+   ```bash
+   ./gradlew build
+   ```
+
+2. **Run tests**:
+   ```bash
+   ./gradlew test
+   ```
+
+3. **Build distributable plugin**:
+   ```bash
+   ./gradlew buildPlugin
+   ```
+
+4. **Run in development IDE**:
+   ```bash
+   ./gradlew runIde
+   ```
+
+### Technology Stack
+
+- **Language**: Java 17
+- **Build Tool**: Gradle 8.14
+- **IntelliJ Platform**: 2024.3
+- **HTTP Client**: OkHttp 4.12.0
+- **JSON Processing**: Gson 2.10.1
+- **Testing**: JUnit 5, Mockito, AssertJ
+
+### Testing
+
+The project includes comprehensive unit tests covering:
+- AI service functionality
+- Action implementations
+- Error handling scenarios
+- Mock server integration
+
+Run the test suite with:
 ```bash
-# Build the plugin
-./gradlew buildPlugin
-
-# Run tests
 ./gradlew test
-
-# Run plugin in development mode
-./gradlew runIde
 ```
 
-**Build Status**: ✅ Successfully builds and generates `cursor-intellij-plugin-1.0.0.zip` in `build/distributions/`
+For more detailed testing information, see [TESTING.md](TESTING.md).
 
-**Compatibility Notes**:
-- Updated IntelliJ Gradle Plugin to version 1.17.3 for Gradle 8.14 compatibility
-- Set Java source and target compatibility to version 17
-- Fixed compilation issues with IntelliJ Platform API usage
+## API Integration
 
-## Testing
+The plugin communicates with Cursor's API using the following endpoint:
+- **Base URL**: `https://api.cursor.com/v1/chat/completions`
+- **Authentication**: Bearer token (API key)
+- **Request Format**: JSON with model, prompt, context, and parameters
 
-The plugin includes a comprehensive test suite with high-quality unit tests covering all major components:
+### Example API Request
 
-### Test Coverage
-
-- **✅ CursorAIService**: API integration, error handling, network failures, response parsing
-- **✅ Action Classes**: User interactions, validation, error scenarios for all actions
-- **✅ Plugin Lifecycle**: Service initialization and startup activities
-- **✅ Build Configuration**: Complete testing framework setup
-
-### Test Framework
-
-- **JUnit 5**: Modern testing framework with Jupiter engine
-- **Mockito**: Mocking framework for dependencies and external services
-- **AssertJ**: Fluent assertions for better test readability
-- **MockWebServer**: HTTP testing for API integration
-- **Gradle Test Configuration**: Optimized test execution with parallel processing
-
-### Running Tests
-
-```bash
-# Run all tests
-./gradlew test
-
-# Run tests with verbose output
-./gradlew test --info
-
-# Run specific test class
-./gradlew test --tests "CursorAIServiceTest"
-
-# Run tests with coverage (if configured)
-./gradlew test jacocoTestReport
+```json
+{
+  "model": "gpt-4",
+  "prompt": "Explain this code",
+  "context": "// Selected code context",
+  "max_tokens": 1000,
+  "temperature": 0.7
+}
 ```
-
-### Test Structure
-
-```
-src/test/java/com/cursor/plugin/
-├── CursorAIServiceTest.java      # API service tests with MockWebServer
-├── CursorPluginTest.java        # Plugin lifecycle tests
-├── GenerateCodeActionTest.java  # Code generation action tests
-├── ExplainCodeActionTest.java   # Code explanation action tests
-└── OpenCursorAIActionTest.java  # Tool window action tests
-```
-
-📖 **For detailed testing information, see [TESTING.md](TESTING.md)**
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+### Code Style
+
+- Follow Java conventions
+- Use meaningful variable and method names
+- Add JavaDoc comments for public methods
+- Maintain test coverage for new features
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"API key not configured" error**:
+   - Ensure your API key is set as an environment variable or system property
+   - Verify the API key is valid and has proper permissions
+
+2. **Plugin not loading**:
+   - Check that you're using a compatible IntelliJ IDEA version (2023.2+)
+   - Verify Java 17+ is installed and configured
+
+3. **Network connectivity issues**:
+   - Check firewall settings
+   - Verify proxy configuration if applicable
+
+### Debug Mode
+
+To enable debug logging, add this system property when starting IntelliJ:
+```bash
+-Dcom.cursor.plugin.debug=true
+```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Build Status
-
-✅ **Successfully Built**: The plugin has been tested and builds successfully, generating `cursor-intellij-plugin-1.0.0.zip` (3.1 MB) in the `build/distributions/` directory.
-
-### Recent Build Fixes
-- Updated IntelliJ Gradle Plugin to version 1.17.3 for Gradle 8.14 compatibility
-- Set Java source and target compatibility to version 17
-- Fixed `Messages.showInfoDialog` compilation error in `ExplainCodeAction.java`
-- Added explicit Java version configuration in `build.gradle`
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-For issues and feature requests, please use the GitHub Issues page.
+- Create an issue on GitHub for bug reports
+- Join our Discord community for discussions
+- Check the [FAQ](https://github.com/your-username/cursor-intellij-plugin/wiki/FAQ) for common questions
 
-## Acknowledgments
+## Changelog
 
-- Built with IntelliJ Platform SDK
-- Powered by Cursor AI
-- Uses OkHttp for HTTP requests
-- Uses Gson for JSON parsing
+### Version 1.0.1 (Current)
+- Initial release with core AI integration
+- Chat panel interface
+- Code generation and explanation actions
+- Context menu integration
+- Comprehensive test suite
+
+### Roadmap
+- Settings panel for API key configuration
+- Advanced code analysis features
+- Custom prompts and templates
+- Integration with more AI models

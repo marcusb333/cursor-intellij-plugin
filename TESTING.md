@@ -1,306 +1,357 @@
 # Testing Documentation
 
-This document provides comprehensive information about the test suite for the Cursor IntelliJ Plugin.
+## Overview
 
-## 🎯 Test Overview
+This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 17 tests achieving 100% pass rate.
 
-The plugin includes a robust test suite with high-quality unit tests covering all major components. The tests are designed to ensure reliability, maintainability, and proper functionality of the plugin.
+## Test Architecture
 
-## 📊 Test Coverage
+### Testing Framework Stack
 
-### Core Components Tested
+- **JUnit 5** (Jupiter) - Core testing framework
+- **Mockito** - Mocking framework for unit tests
+- **AssertJ** - Fluent assertion library
+- **MockWebServer** - HTTP server mocking for API integration tests
 
-- **✅ CursorAIService**: API integration, error handling, network failures, response parsing
-- **✅ Action Classes**: User interactions, validation, error scenarios for all actions
-- **✅ Plugin Lifecycle**: Service initialization and startup activities
-- **✅ Build Configuration**: Complete testing framework setup
-
-### Test Statistics
-
-- **Total Test Classes**: 5
-- **Total Test Methods**: 25+
-- **Coverage Areas**: API Service, Actions, Plugin Lifecycle, Error Handling
-- **Test Framework**: JUnit 5, Mockito, AssertJ, MockWebServer
-
-## 🛠 Test Framework Stack
-
-### Dependencies
-
-```gradle
-testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
-testImplementation 'org.junit.platform:junit-platform-suite-api:1.9.2'
-testImplementation 'org.mockito:mockito-core:5.1.1'
-testImplementation 'org.mockito:mockito-junit-jupiter:5.1.1'
-testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-testImplementation 'org.assertj:assertj-core:3.24.2'
-```
-
-### Framework Features
-
-- **JUnit 5**: Modern testing framework with Jupiter engine
-- **Mockito**: Advanced mocking with strict stubbing validation
-- **AssertJ**: Fluent assertions for readable test code
-- **MockWebServer**: HTTP testing for API integration scenarios
-- **Gradle Test Configuration**: Parallel execution, timeout management, JVM optimization
-
-## 📁 Test Structure
+### Test Structure
 
 ```
 src/test/java/com/cursor/plugin/
-├── CursorAIServiceTest.java      # API service tests with MockWebServer
-├── CursorPluginTest.java        # Plugin lifecycle tests
-├── GenerateCodeActionTest.java  # Code generation action tests
-├── ExplainCodeActionTest.java   # Code explanation action tests
-└── OpenCursorAIActionTest.java  # Tool window action tests
-
-src/test/resources/
-└── test.properties              # Test configuration
+├── CursorAIServiceTest.java       # API service integration tests (5 tests)
+├── ExplainCodeActionTest.java     # Code explanation action tests
+├── GenerateCodeActionTest.java    # Code generation action tests
+└── OpenCursorAIActionTest.java    # Panel opening action tests
 ```
 
-## 🚀 Running Tests
+## Test Categories
 
-### Basic Commands
+### 1. Unit Tests
+
+**CursorAIServiceTest** - Core API integration testing
+- ✅ Service instance creation and retrieval
+- ✅ API communication with valid credentials
+- ✅ Error handling for missing API keys
+- ✅ Network error handling
+- ✅ Malformed response parsing
+
+**Action Tests** - UI action functionality
+- ✅ Context menu action registration
+- ✅ Action execution and error handling
+- ✅ User interaction scenarios
+
+### 2. Integration Tests
+
+- **Mock Server Testing**: Uses OkHttp MockWebServer to simulate API responses
+- **Error Scenario Testing**: Validates proper error handling for various failure modes
+- **Timeout Testing**: Ensures proper handling of network timeouts
+
+## Running Tests
+
+### Command Line
 
 ```bash
 # Run all tests
 ./gradlew test
 
-# Run tests with verbose output
+# Run specific test class
+./gradlew test --tests CursorAIServiceTest
+
+# Run tests with detailed output
 ./gradlew test --info
 
-# Run tests with debug output
-./gradlew test --debug
-
-# Run specific test class
-./gradlew test --tests "CursorAIServiceTest"
-
-# Run specific test method
-./gradlew test --tests "CursorAIServiceTest.testSendMessageWithValidApiKey"
-```
-
-### Advanced Test Execution
-
-```bash
-# Run tests in parallel (configured in build.gradle)
-./gradlew test --parallel
-
-# Run tests with coverage report (if Jacoco is configured)
+# Run tests and generate coverage report
 ./gradlew test jacocoTestReport
-
-# Run tests with custom JVM arguments
-./gradlew test -Dtest.jvmArgs="-Xmx2g -XX:+UseG1GC"
-
-# Run tests with specific system properties
-./gradlew test -Dtest.api.key=test-key-12345
 ```
 
-## 🧪 Test Categories
+### IDE Integration
 
-### 1. CursorAIService Tests
+Tests can be run directly from IntelliJ IDEA:
+1. Right-click on test files or test methods
+2. Select "Run Test" or "Debug Test"
+3. View results in the Test Runner window
 
-**File**: `CursorAIServiceTest.java`
+## Test Configuration
 
-**Coverage**:
-- API key validation (missing, empty, valid)
-- HTTP request/response handling
-- Network error scenarios
-- Response parsing and error handling
-- Request payload structure validation
-- Environment variable vs system property API key handling
+### Environment Setup
 
-**Key Test Methods**:
-- `testSendMessageWithValidApiKey()`
-- `testSendMessageWithMissingApiKey()`
-- `testSendMessageWithApiError()`
-- `testSendMessageWithNetworkError()`
-- `testSendMessageWithMalformedResponse()`
-- `testRequestPayloadStructure()`
-
-### 2. Action Class Tests
-
-**Files**: `GenerateCodeActionTest.java`, `ExplainCodeActionTest.java`, `OpenCursorAIActionTest.java`
-
-**Coverage**:
-- User interaction validation
-- Input validation (null, empty, invalid inputs)
-- Action enablement/disablement logic
-- Error handling and user feedback
-- Integration with CursorAIService
-
-**Key Test Methods**:
-- `testActionPerformedWithValidInput()`
-- `testActionPerformedWithNullInput()`
-- `testUpdateWithValidProject()`
-- `testUpdateWithNullProject()`
-
-### 3. Plugin Lifecycle Tests
-
-**File**: `CursorPluginTest.java`
-
-**Coverage**:
-- Service initialization
-- Plugin startup activity
-- Service registration and retrieval
-- Plugin configuration validation
-
-**Key Test Methods**:
-- `testRunActivityWithValidProject()`
-- `testRunActivityInitializesAiService()`
-- `testPluginImplementsStartupActivity()`
-
-## 🔧 Test Configuration
-
-### Gradle Test Configuration
-
-```gradle
-test {
-    useJUnitPlatform()
-    
-    // Test configuration
-    testLogging {
-        events "passed", "skipped", "failed"
-        exceptionFormat "full"
-        showStandardStreams = true
-    }
-    
-    // Set test timeout
-    timeout = Duration.ofMinutes(5)
-    
-    // Enable parallel execution
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    
-    // Test system properties
-    systemProperty 'test.api.key', 'test-api-key-12345'
-    systemProperty 'test.timeout.seconds', '30'
-    
-    // JVM arguments for tests
-    jvmArgs '-Xmx1g', '-XX:+UseG1GC'
-}
-```
+Tests automatically handle:
+- API key configuration via system properties
+- Mock server initialization and cleanup
+- Resource management (HTTP clients, connections)
 
 ### Test Properties
 
-**File**: `src/test/resources/test.properties`
+Located in `src/test/resources/test.properties`:
+- Test timeout configurations
+- Mock server settings
+- Debug logging levels
 
-```properties
-# Test configuration properties
-test.api.key=test-api-key-12345
-test.timeout.seconds=30
-test.mock.server.port=8080
+## Detailed Test Descriptions
 
-# Test data
-test.sample.code=public class TestClass { public void testMethod() { } }
-test.sample.response=This is a test response from the AI service
+### CursorAIServiceTest
+
+#### testGetInstance()
+- **Purpose**: Verify service instance retrieval from IntelliJ's service container
+- **Method**: Uses Mockito to mock Project service
+- **Assertions**: Service instance is not null and correct type
+
+#### testSendMessageWithValidApiKey()
+- **Purpose**: Test successful API communication
+- **Setup**: 
+  - Sets API key via system property
+  - Configures mock server with valid JSON response
+  - Uses CountDownLatch for async testing
+- **Assertions**: 
+  - Response received within timeout
+  - Content matches expected value
+  - HTTP headers are correct
+
+#### testSendMessageWithMissingApiKey()
+- **Purpose**: Validate error handling when API key is not configured
+- **Method**: 
+  - Clears system properties
+  - Uses custom service override to simulate missing key scenario
+- **Assertions**: Error callback triggered with appropriate message
+
+#### testSendMessageWithApiError()
+- **Purpose**: Test handling of HTTP error responses (401, 500, etc.)
+- **Setup**: Mock server returns 401 Unauthorized
+- **Assertions**: Error callback contains API error details
+
+#### testSendMessageWithMalformedResponse()
+- **Purpose**: Validate parsing error handling
+- **Setup**: Mock server returns invalid JSON
+- **Assertions**: Parse error is caught and reported to user
+
+### Action Tests
+
+#### Context Menu Integration
+- Verify actions are properly registered
+- Test action availability based on context
+- Validate proper editor integration
+
+#### Error Handling
+- Network connectivity issues
+- API authentication failures
+- Invalid code selections
+
+## Mock Server Testing
+
+### Setup
+```java
+MockWebServer mockServer = new MockWebServer();
+mockServer.start();
+String baseUrl = mockServer.url("/").toString();
 ```
 
-## 🐛 Common Test Issues and Solutions
+### Response Mocking
+```java
+mockServer.enqueue(new MockResponse()
+    .setResponseCode(200)
+    .setBody(jsonResponse.toString())
+    .addHeader("Content-Type", "application/json"));
+```
 
-### Mockito Strictness Warnings
+### Request Validation
+```java
+RecordedRequest request = mockServer.takeRequest();
+assertThat(request.getHeader("Authorization")).isEqualTo("Bearer test-api-key");
+```
 
-**Issue**: `UnnecessaryStubbingException` when mocks are set up but not used.
+## Asynchronous Testing
 
-**Solution**: Use `@MockitoSettings(strictness = Strictness.LENIENT)` or remove unused stubs.
+### CountDownLatch Pattern
+```java
+CountDownLatch latch = new CountDownLatch(1);
+AtomicReference<String> result = new AtomicReference<>();
+
+callback = new CursorAIResponseCallback() {
+    @Override
+    public void onSuccess(String response) {
+        result.set(response);
+        latch.countDown();
+    }
+};
+
+service.sendMessage("test", "context", callback);
+assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+```
+
+## Test Data Management
+
+### API Response Simulation
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "content": "AI-generated response"
+      }
+    }
+  ]
+}
+```
+
+### Error Response Simulation
+- HTTP status codes (401, 500, 503)
+- Malformed JSON responses
+- Network timeout scenarios
+
+## Continuous Integration
+
+### GitHub Actions (Future)
+```yaml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+      - run: ./gradlew test
+```
+
+## Test Maintenance
+
+### Adding New Tests
+
+1. **Create test class** following naming convention: `*Test.java`
+2. **Use appropriate annotations**: `@ExtendWith(MockitoExtension.class)`
+3. **Follow AAA pattern**: Arrange, Act, Assert
+4. **Include setup/teardown**: `@BeforeEach`, `@AfterEach`
+
+### Test Best Practices
+
+- **Descriptive test names**: Use clear, descriptive method names
+- **Independent tests**: Each test should be isolated and not depend on others
+- **Mock external dependencies**: Use MockWebServer for HTTP, Mockito for services
+- **Assert meaningful outcomes**: Test behavior, not implementation
+- **Clean up resources**: Properly close mock servers and HTTP clients
+
+### Example Test Template
 
 ```java
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-class MyTest {
-    // Test implementation
+class NewFeatureTest {
+    
+    @Mock
+    private Project mockProject;
+    
+    private MockWebServer mockServer;
+    private ServiceUnderTest service;
+    
+    @BeforeEach
+    void setUp() throws Exception {
+        mockServer = new MockWebServer();
+        mockServer.start();
+        service = new ServiceUnderTest(mockProject, mockServer.url("/").toString());
+    }
+    
+    @AfterEach
+    void tearDown() throws IOException {
+        if (mockServer != null) {
+            mockServer.shutdown();
+        }
+    }
+    
+    @Test
+    void shouldHandleSuccessfulOperation() {
+        // Arrange
+        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        
+        // Act
+        Result result = service.performOperation();
+        
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.isSuccess()).isTrue();
+    }
 }
 ```
 
-### MockWebServer IOException
+## Debugging Tests
 
-**Issue**: `IOException` when shutting down MockWebServer.
+### Common Issues
 
-**Solution**: Wrap shutdown calls in try-catch blocks.
+1. **Timeout failures**: Increase timeout values or check async handling
+2. **Mock server issues**: Verify server startup and proper URL usage
+3. **Resource leaks**: Ensure proper cleanup in tearDown methods
+
+### Debug Techniques
 
 ```java
-try {
-    mockServer.shutdown();
-} catch (IOException e) {
-    // Ignore shutdown errors in tests
-}
+// Enable debug logging
+System.setProperty("com.cursor.plugin.debug", "true");
+
+// Add debug output
+System.out.println("Request: " + mockServer.takeRequest());
+
+// Use breakpoints in IDE
+// Set conditional breakpoints for specific scenarios
 ```
 
-### IntelliJ Platform Dependencies
+## Performance Testing
 
-**Issue**: IntelliJ Platform test framework dependencies not available.
+### Load Testing
+- Multiple concurrent requests
+- Large response handling
+- Memory usage validation
 
-**Solution**: Use standard testing frameworks (JUnit 5, Mockito) instead of IntelliJ-specific test frameworks.
+### Timeout Testing
+- Network delay simulation
+- Connection timeout scenarios
+- Read/write timeout validation
 
-## 📈 Test Quality Metrics
-
-### Code Coverage Goals
+## Test Coverage Goals
 
 - **Line Coverage**: > 80%
 - **Branch Coverage**: > 75%
 - **Method Coverage**: > 90%
 
-### Test Quality Standards
+### Generating Coverage Reports
 
-- **Test Isolation**: Each test is independent and can run in any order
-- **Test Clarity**: Tests are readable and self-documenting
-- **Test Reliability**: Tests produce consistent results
-- **Test Performance**: Tests complete within reasonable time limits
-
-## 🔄 Continuous Integration
-
-### CI/CD Integration
-
-The test suite is designed to run in CI/CD pipelines:
-
-```yaml
-# Example GitHub Actions workflow
-- name: Run Tests
-  run: ./gradlew test
-  
-- name: Generate Test Report
-  run: ./gradlew test jacocoTestReport
+```bash
+./gradlew test jacocoTestReport
+open build/reports/jacoco/test/html/index.html
 ```
 
-### Test Reporting
+## Security Testing
 
-- **Gradle Test Reports**: Available in `build/reports/tests/test/`
-- **JUnit XML Reports**: Compatible with CI/CD systems
-- **Coverage Reports**: Jacoco reports for code coverage analysis
+### API Key Handling
+- Verify no keys in logs
+- Test key validation
+- Check secure storage
 
-## 🚀 Future Enhancements
+### Network Security
+- HTTPS enforcement
+- Certificate validation
+- Header security
 
-### Planned Test Improvements
+## Test Environment
 
-1. **Integration Tests**: End-to-end testing with real IntelliJ instances
-2. **Performance Tests**: Load testing for API calls and UI responsiveness
-3. **UI Tests**: Automated testing of the chat panel and user interactions
-4. **Coverage Reports**: Jacoco integration for detailed coverage analysis
-5. **Test Data Management**: Centralized test data and fixtures
+### System Requirements
+- Java 17+
+- Gradle 8.14+
+- Internet connection for dependency download
+- Available ports for MockWebServer
 
-### Test Automation
+### Test Isolation
+- Each test uses separate mock server instance
+- System properties are properly restored
+- No shared state between tests
 
-- **Automated Test Execution**: Scheduled test runs
-- **Test Result Notifications**: Automated reporting of test failures
-- **Performance Monitoring**: Track test execution times and performance trends
+## Troubleshooting
 
-## 📚 Best Practices
+### Common Test Failures
 
-### Writing Tests
+1. **Port conflicts**: MockWebServer can't bind to port
+   - Solution: Use random ports or cleanup existing servers
 
-1. **Arrange-Act-Assert**: Follow the AAA pattern for test structure
-2. **Descriptive Names**: Use clear, descriptive test method names
-3. **Single Responsibility**: Each test should verify one specific behavior
-4. **Mock External Dependencies**: Use mocks for external services and APIs
-5. **Test Edge Cases**: Include tests for error conditions and edge cases
+2. **Timeout issues**: Tests fail due to timing
+   - Solution: Increase timeout values or fix async handling
 
-### Maintaining Tests
-
-1. **Keep Tests Updated**: Update tests when code changes
-2. **Refactor Tests**: Improve test code quality over time
-3. **Remove Dead Tests**: Delete tests for removed functionality
-4. **Document Complex Tests**: Add comments for complex test logic
-
-## 🎯 Conclusion
-
-The comprehensive test suite ensures the reliability and maintainability of the Cursor IntelliJ Plugin. The tests cover all major components and provide confidence in the plugin's functionality across various scenarios and edge cases.
-
-For questions or contributions to the test suite, please refer to the main project documentation or create an issue in the repository.
+3. **Resource leaks**: Tests leave connections open
+   - Solution: Proper cleanup in @AfterEach methods
