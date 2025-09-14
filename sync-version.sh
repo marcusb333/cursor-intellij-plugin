@@ -64,7 +64,7 @@ update_version_in_file() {
 
 # Update build.gradle (only the project version, not plugin versions)
 print_status "Updating build.gradle..."
-update_version_in_file "build.gradle" "s/^version '[^']*'/version '$PLUGIN_VERSION'/g"
+update_version_in_file "build.gradle" "s/^[[:space:]]*version[[:space:]]*['\"][^'\"]*['\"][[:space:]]*$/version '$PLUGIN_VERSION'/g"
 
 # Update build.sh script
 print_status "Updating build.sh..."
