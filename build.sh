@@ -81,9 +81,12 @@ build_plugin() {
     ./gradlew build
     print_success "Plugin built successfully"
 
+    # Extract version from plugin.xml
+    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
+    
     # Show build artifacts
-    if [ -f "build/libs/cursor-intellij-plugin-1.0.1.jar" ]; then
-        print_status "Plugin JAR: build/libs/cursor-intellij-plugin-1.0.1.jar"
+    if [ -f "build/libs/cursor-intellij-plugin-${PLUGIN_VERSION}.jar" ]; then
+        print_status "Plugin JAR: build/libs/cursor-intellij-plugin-${PLUGIN_VERSION}.jar"
     fi
 }
 
@@ -93,9 +96,12 @@ build_distribution() {
     ./gradlew buildPlugin
     print_success "Plugin distribution created"
 
+    # Extract version from plugin.xml
+    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
+    
     # Show distribution location
-    if [ -f "build/distributions/cursor-intellij-plugin-1.0.1.zip" ]; then
-        print_status "Distribution ZIP: build/distributions/cursor-intellij-plugin-1.0.1.zip"
+    if [ -f "build/distributions/cursor-intellij-plugin-${PLUGIN_VERSION}.zip" ]; then
+        print_status "Distribution ZIP: build/distributions/cursor-intellij-plugin-${PLUGIN_VERSION}.zip"
     fi
 }
 

@@ -2,6 +2,7 @@
     <id>com.cursor.plugin</id>
     <name>Cursor AI Assistant</name>
     <vendor email="support@cursor.com" url="https://cursor.com">Cursor</vendor>
+    <version>1.0.2</version>
 
     <description><![CDATA[
     <h2>Cursor AI Assistant Plugin</h2>
@@ -27,7 +28,7 @@
     ]]></description>
 
     <change-notes><![CDATA[
-    <h3>Version 1.0.1</h3>
+    <h3>Version 1.0.2</h3>
     <ul>
         <li>Updated for IntelliJ IDEA 2024.3+ compatibility</li>
         <li>Improved Java 17 support</li>
@@ -51,7 +52,9 @@
                    icon="/icons/cursor-icon.png" 
                    anchor="right" 
                    factoryClass="com.cursor.plugin.CursorToolWindowFactory"/>
-        
+    </extensions>
+
+    <actions>
         <action id="com.cursor.plugin.OpenCursorAI" 
                 class="com.cursor.plugin.OpenCursorAIAction" 
                 text="Open Cursor AI" 
@@ -59,9 +62,7 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift C"/>
         </action>
-    </extensions>
-
-    <actions>
+        
         <action id="com.cursor.plugin.GenerateCode" 
                 class="com.cursor.plugin.GenerateCodeAction" 
                 text="Generate Code with Cursor" 

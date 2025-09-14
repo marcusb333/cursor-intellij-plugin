@@ -1,10 +1,13 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.17.3'
+    id 'com.cursor.intellij-plugin' version '1.0.2'
 }
 
 group 'com.cursor'
-version '1.0.1'
+
+// Extract version from plugin.xml
+def pluginXml = new XmlSlurper().parse(file('src/main/resources/META-INF/plugin.xml'))
+version = pluginXml.version.text()
 
 repositories {
     mavenCentral()
@@ -38,7 +41,7 @@ intellij {
 
 patchPluginXml {
     changeNotes = """
-      Initial release of Cursor Chatbot Plugin for IntelliJ IDEA.
+      Version ${version} of Cursor Chatbot Plugin for IntelliJ IDEA.
       Features:
       - Integrated Cursor AI chatbot
       - Code assistance and suggestions

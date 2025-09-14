@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class CursorAIService {
+final public class CursorAIService {
     private static final String CURSOR_API_URL = "https://api.cursor.com/v1/chat/completions";
     private static final String API_KEY_PROPERTY = "cursor.api.key";
-    
+
     private final Project project;
     private final OkHttpClient httpClient;
     private final Gson gson;
