@@ -42,10 +42,11 @@ public class ExplainCodeAction extends AnAction {
             @Override
             public void onSuccess(String response) {
                 SwingUtilities.invokeLater(() -> {
-                    Messages.showInfoDialog(
+                    Messages.showMessageDialog(
                             project,
                             response,
-                            "Code Explanation"
+                            "Code Explanation",
+                            Messages.getInformationIcon()
                     );
                 });
             }

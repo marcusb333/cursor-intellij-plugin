@@ -87,8 +87,9 @@ cursor-intellij-plugin/
 
 ### Prerequisites
 - IntelliJ IDEA 2023.2 or later
-- Java 11 or later
+- Java 17 or later (required for compatibility)
 - Cursor API key
+- Gradle 8.14 (included via wrapper)
 
 ### Build Instructions
 ```bash
@@ -174,11 +175,21 @@ The plugin supports multiple ways to configure the Cursor API key:
 - ✅ **Chat UI**: Complete
 - ✅ **Tool Window**: Complete
 - ✅ **Context Menu Actions**: Complete
-- ✅ **Build System**: Complete
-- ✅ **Documentation**: Complete
+- ✅ **Build System**: Complete and tested
+- ✅ **Documentation**: Complete and updated
+- ✅ **Plugin Build**: Successfully generates `cursor-intellij-plugin-1.0.0.zip`
 - 🔄 **Icon Assets**: Needs actual PNG files
 - 🔄 **Settings Panel**: Planned enhancement
 - 🔄 **Testing**: Basic structure ready
+
+## 🔧 Build Fixes Applied
+
+During the build process, the following issues were resolved:
+
+1. **IntelliJ Gradle Plugin Compatibility**: Updated from version 1.13.3 to 1.17.3 for Gradle 8.14 compatibility
+2. **Java Version Compatibility**: Set both source and target compatibility to Java 17 (required for IntelliJ Platform 2023.2)
+3. **API Method Fix**: Fixed `Messages.showInfoDialog` compilation error by using `Messages.showMessageDialog` with proper parameters
+4. **Build Configuration**: Added explicit Java version configuration in `build.gradle`
 
 ## 🎉 Conclusion
 
