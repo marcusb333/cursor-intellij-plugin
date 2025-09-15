@@ -15,6 +15,53 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Main UI component for the Cursor AI chat interface within the tool window.
+ *
+ * <p>This panel provides a comprehensive chat-based interface for users to interact
+ * with the Cursor AI service. It extends JPanel to integrate seamlessly with
+ * IntelliJ's Swing-based UI framework and provides a rich, interactive experience
+ * for AI-assisted development.</p>
+ *
+ * <p>Core Features:</p>
+ * <ul>
+ *   <li>Real-time chat interface with the Cursor AI service</li>
+ *   <li>Message history and conversation management</li>
+ *   <li>Code snippet formatting and syntax highlighting</li>
+ *   <li>Copy/paste functionality for code sharing</li>
+ *   <li>Responsive layout that adapts to tool window resizing</li>
+ * </ul>
+ *
+ * <p>User Interface Components:</p>
+ * <ul>
+ *   <li>Message display area with scrollable history</li>
+ *   <li>Text input field for user messages</li>
+ *   <li>Send button and keyboard shortcuts</li>
+ *   <li>Status indicators for API communication</li>
+ *   <li>Context menu for additional actions</li>
+ * </ul>
+ *
+ * <p>Interaction Capabilities:</p>
+ * <ul>
+ *   <li>Multi-turn conversations with context retention</li>
+ *   <li>Code analysis and explanation requests</li>
+ *   <li>Code generation and refactoring suggestions</li>
+ *   <li>Project-specific assistance and guidance</li>
+ *   <li>Integration with editor selection and cursor position</li>
+ * </ul>
+ *
+ * <p>The panel manages the communication with {@link CursorAIService} and handles
+ * the presentation of both user messages and AI responses in a clear, organized
+ * format. It ensures proper threading for UI updates and provides error handling
+ * for network and API issues.</p>
+ *
+ * @author Cursor AI Plugin Team
+ * @version 0.0.4
+ * @since 1.0
+ * @see CursorAIService
+ * @see CursorToolWindowFactory
+ * @see javax.swing.JPanel
+ */
 public class CursorChatPanel extends JPanel {
     private final Project project;
     private final JBTextArea chatArea;
