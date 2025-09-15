@@ -3,7 +3,6 @@ package com.cursor.plugin;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
-import groovy.transform.options.Visibility;
 import okhttp3.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
