@@ -119,7 +119,7 @@ class CursorAIService private constructor(
         // Log API key status for debugging (without exposing the actual key)
         println("Cursor Plugin: API key found (length: ${apiKey.length} characters)")
 
-    val requestBody = JsonObject().apply {
+        val requestBody = JsonObject().apply {
             addProperty("model", "gpt-4")
             addProperty("prompt", message)
             addProperty("context", context)
