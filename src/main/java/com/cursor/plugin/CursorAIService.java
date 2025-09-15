@@ -1,6 +1,5 @@
 package com.cursor.plugin;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
 import okhttp3.*;
@@ -146,7 +145,6 @@ public final class CursorAIService {
         });
     }
 
-    @VisibleForTesting
     String getApiKey() {
         // Try multiple sources for the API key, in order of preference:
 
