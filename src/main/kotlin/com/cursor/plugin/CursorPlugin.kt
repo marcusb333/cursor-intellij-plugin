@@ -1,9 +1,9 @@
-package com.cursor.plugin;
+package com.cursor.plugin
 
-import com.intellij.openapi.components.Service;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.startup.StartupActivity;
-import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.startup.StartupActivity
+import org.jetbrains.annotations.NotNull
 
 /**
  * Main plugin class for the Cursor AI IntelliJ IDEA plugin.
@@ -27,11 +27,10 @@ import org.jetbrains.annotations.NotNull;
  * @see StartupActivity
  */
 @Service
-public final class CursorPlugin implements StartupActivity {
+class CursorPlugin : StartupActivity {
     
-    @Override
-    public void runActivity(@NotNull Project project) {
+    override fun runActivity(@NotNull project: Project) {
         // Initialize Cursor AI service
-        CursorAIService.getInstance(project);
+        CursorAIService.getInstance(project)
     }
 }

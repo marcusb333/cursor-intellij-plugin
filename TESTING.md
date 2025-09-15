@@ -16,11 +16,11 @@ This document describes the testing strategy, test structure, and how to run tes
 ### Test Structure
 
 ```
-src/test/java/com/cursor/plugin/
-├── CursorAIServiceTest.java       # API service integration tests (5 tests)
-├── ExplainCodeActionTest.java     # Code explanation action tests
-├── GenerateCodeActionTest.java    # Code generation action tests
-└── OpenCursorAIActionTest.java    # Panel opening action tests
+src/test/kotlin/com/cursor/plugin/
+├── CursorAIServiceTest.kt         # API service integration tests (11 tests)
+├── ExplainCodeActionTest.kt       # Code explanation action tests
+├── GenerateCodeActionTest.kt      # Code generation action tests
+└── OpenCursorAIActionTest.kt      # Panel opening action tests
 ```
 
 ## Test Categories
@@ -36,6 +36,9 @@ src/test/java/com/cursor/plugin/
 - ✅ Malformed response parsing
 - ✅ Empty response handling
 - ✅ Server error scenarios
+- ✅ Constructor pattern testing with companion objects
+- ✅ Factory method testing for test instances
+- ✅ API key validation from multiple sources
 
 **Action Tests** - UI action functionality
 - ✅ Context menu action registration
@@ -160,19 +163,19 @@ Located in `src/test/resources/test.properties`:
 
 The tests now use Mockito spies instead of environment variable manipulation to avoid `UnsupportedOperationException` when trying to modify `System.getenv()`:
 
-```java
+```kotlin
 @BeforeEach
-void setUp() throws Exception {
-    mockServer = new MockWebServer();
-    mockServer.start();
-    aiService = new CursorAIService(mockProject, mockServer.url("/").toString());
-    spyService = spy(aiService);  // Create spy for mocking
+fun setUp() {
+    mockServer = MockWebServer()
+    mockServer.start()
+    aiService = CursorAIService.createForTesting(mockProject, mockServer.url("/").toString())
+    spyService = spy(aiService)  // Create spy for mocking
 }
 
 @Test
-void testSendMessageWithValidApiKey() {
+fun testSendMessageWithValidApiKey() {
     // Given
-    when(spyService.getApiKey()).thenReturn(TEST_API_KEY);
+    `when`(spyService.getApiKey()).thenReturn(TEST_API_KEY)
     // ... rest of test
 }
 ```
@@ -186,43 +189,46 @@ void testSendMessageWithValidApiKey() {
 ## Mock Server Testing
 
 ### Setup
-```java
-MockWebServer mockServer = new MockWebServer();
-mockServer.start();
-String baseUrl = mockServer.url("/").toString();
+```kotlin
+val mockServer = MockWebServer()
+mockServer.start()
+val baseUrl = mockServer.url("/").toString()
 ```
 
 ### Response Mocking
-```java
-mockServer.enqueue(new MockResponse()
+```kotlin
+mockServer.enqueue(MockResponse()
     .setResponseCode(200)
     .setBody(jsonResponse.toString())
-    .addHeader("Content-Type", "application/json"));
+    .addHeader("Content-Type", "application/json"))
 ```
 
 ### Request Validation
-```java
-RecordedRequest request = mockServer.takeRequest();
-assertThat(request.getHeader("Authorization")).isEqualTo("Bearer test-api-key");
+```kotlin
+val request = mockServer.takeRequest()
+assertThat(request.getHeader("Authorization")).isEqualTo("Bearer test-api-key")
 ```
 
 ## Asynchronous Testing
 
 ### CountDownLatch Pattern
-```java
-CountDownLatch latch = new CountDownLatch(1);
-AtomicReference<String> result = new AtomicReference<>();
+```kotlin
+val latch = CountDownLatch(1)
+val result = AtomicReference<String>()
 
-callback = new CursorAIResponseCallback() {
-    @Override
-    public void onSuccess(String response) {
-        result.set(response);
-        latch.countDown();
+val callback = object : CursorAIService.CursorAIResponseCallback {
+    override fun onSuccess(response: String) {
+        result.set(response)
+        latch.countDown()
     }
-};
+    
+    override fun onError(error: String) {
+        // Handle error
+    }
+}
 
-service.sendMessage("test", "context", callback);
-assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+service.sendMessage("test", "context", callback)
+assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue()
 ```
 
 ## Test Data Management
@@ -281,41 +287,39 @@ jobs:
 
 ### Example Test Template
 
-```java
-@ExtendWith(MockitoExtension.class)
+```kotlin
+@ExtendWith(MockitoExtension::class)
 class NewFeatureTest {
     
     @Mock
-    private Project mockProject;
+    private lateinit var mockProject: Project
     
-    private MockWebServer mockServer;
-    private ServiceUnderTest service;
+    private lateinit var mockServer: MockWebServer
+    private lateinit var service: ServiceUnderTest
     
     @BeforeEach
-    void setUp() throws Exception {
-        mockServer = new MockWebServer();
-        mockServer.start();
-        service = new ServiceUnderTest(mockProject, mockServer.url("/").toString());
+    fun setUp() {
+        mockServer = MockWebServer()
+        mockServer.start()
+        service = ServiceUnderTest.createForTesting(mockProject, mockServer.url("/").toString())
     }
     
     @AfterEach
-    void tearDown() throws IOException {
-        if (mockServer != null) {
-            mockServer.shutdown();
-        }
+    fun tearDown() {
+        mockServer.shutdown()
     }
     
     @Test
-    void shouldHandleSuccessfulOperation() {
+    fun shouldHandleSuccessfulOperation() {
         // Arrange
-        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        mockServer.enqueue(MockResponse().setResponseCode(200))
         
         // Act
-        Result result = service.performOperation();
+        val result = service.performOperation()
         
         // Assert
-        assertThat(result).isNotNull();
-        assertThat(result.isSuccess()).isTrue();
+        assertThat(result).isNotNull()
+        assertThat(result.isSuccess()).isTrue()
     }
 }
 ```
@@ -330,12 +334,12 @@ class NewFeatureTest {
 
 ### Debug Techniques
 
-```java
+```kotlin
 // Enable debug logging
-System.setProperty("com.cursor.plugin.debug", "true");
+System.setProperty("com.cursor.plugin.debug", "true")
 
 // Add debug output
-System.out.println("Request: " + mockServer.takeRequest());
+println("Request: ${mockServer.takeRequest()}")
 
 // Use breakpoints in IDE
 // Set conditional breakpoints for specific scenarios

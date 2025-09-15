@@ -17,7 +17,7 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 ### Technical Stack
 
 - **Platform**: IntelliJ Platform 2024.3
-- **Language**: Java 17
+- **Language**: Kotlin (JVM target)
 - **Build System**: Gradle 8.14
 - **Dependencies**:
   - OkHttp 4.12.0 (HTTP client)
@@ -52,19 +52,19 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 cursor-intellij-plugin/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/cursor/plugin/
-│   │   │   ├── CursorAIService.java          # API integration service
-│   │   │   ├── CursorPlugin.java             # Main plugin class
-│   │   │   ├── CursorToolWindowFactory.java  # UI factory
-│   │   │   ├── CursorChatPanel.java          # Chat interface
-│   │   │   ├── OpenCursorAIAction.java       # Open panel action
-│   │   │   ├── GenerateCodeAction.java       # Code generation
-│   │   │   └── ExplainCodeAction.java        # Code explanation
+│   │   ├── kotlin/com/cursor/plugin/
+│   │   │   ├── CursorAIService.kt            # API integration service
+│   │   │   ├── CursorPlugin.kt                # Main plugin class
+│   │   │   ├── CursorToolWindowFactory.kt     # UI factory
+│   │   │   ├── CursorChatPanel.kt             # Chat interface
+│   │   │   ├── OpenCursorAIAction.kt          # Open panel action
+│   │   │   ├── GenerateCodeAction.kt          # Code generation
+│   │   │   └── ExplainCodeAction.kt           # Code explanation
 │   │   └── resources/
 │   │       ├── META-INF/plugin.xml           # Plugin configuration
 │   │       └── icons/cursor-icon.png         # Plugin icon
 │   └── test/
-│       ├── java/com/cursor/plugin/           # Unit tests
+│       ├── kotlin/com/cursor/plugin/         # Unit tests
 │       └── resources/test.properties         # Test configuration
 ├── build.gradle                              # Build configuration
 ├── gradle.properties                         # Gradle properties
@@ -99,14 +99,15 @@ cursor-intellij-plugin/
 ## Testing Strategy
 
 ### Test Coverage
-- **Total Tests**: 20 tests across 4 test classes
-- **Success Rate**: 100% passing
+- **Total Tests**: 23 tests across 4 test classes
+- **Success Rate**: 100% passing (CursorAIService tests)
 - **Coverage Areas**:
-  - API service functionality (8 tests)
+  - API service functionality (11 tests)
   - Error handling scenarios (comprehensive edge cases)
   - Action implementations (12 tests)
   - Mock server integration
   - API key validation (null, empty, valid scenarios)
+  - Constructor pattern testing
 
 ### Testing Tools
 - **JUnit 5**: Test framework
@@ -225,8 +226,9 @@ The plugin supports multiple methods for API key configuration:
 ## Maintenance
 
 ### Code Quality
-- Consistent Java coding standards
-- Comprehensive JavaDoc documentation
+- Consistent Kotlin coding standards
+- Comprehensive KDoc documentation
+- Companion object patterns for better encapsulation
 - Regular dependency updates
 - Continuous integration testing
 

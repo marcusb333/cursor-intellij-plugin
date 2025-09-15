@@ -1,11 +1,11 @@
-package com.cursor.plugin;
+package com.cursor.plugin
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
-import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowManager
+import org.jetbrains.annotations.NotNull
 
 /**
  * IntelliJ IDEA action that opens the Cursor AI tool window for interactive chat.
@@ -48,25 +48,18 @@ import org.jetbrains.annotations.NotNull;
  * @see CursorChatPanel
  * @see com.intellij.openapi.actionSystem.AnAction
  */
-public class OpenCursorAIAction extends AnAction {
+class OpenCursorAIAction : AnAction() {
     
-    @Override
-    public void actionPerformed(@NotNull AnActionEvent e) {
-        Project project = e.getProject();
-        if (project == null) {
-            return;
-        }
+    override fun actionPerformed(@NotNull e: AnActionEvent) {
+        val project = e.project ?: return
         
-        ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
-        ToolWindow toolWindow = toolWindowManager.getToolWindow("Cursor AI");
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow("Cursor AI")
         
-        if (toolWindow != null) {
-            toolWindow.show();
-        }
+        toolWindow?.show()
     }
     
-    @Override
-    public void update(@NotNull AnActionEvent e) {
-        e.getPresentation().setEnabled(e.getProject() != null);
+    override fun update(@NotNull e: AnActionEvent) {
+        e.presentation.isEnabled = e.project != null
     }
 }

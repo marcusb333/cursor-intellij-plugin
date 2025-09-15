@@ -31,7 +31,7 @@ print_error() {
 
 # Wrapper for Gradle with common flags
 gradle_cmd() {
-    ./gradlew --stacktrace --no-daemon --warning-mode all "$@"
+    ./gradlew --stacktrace --no-daemon --no-configuration-cache "$@"
 }
 
 # Function to check prerequisites
