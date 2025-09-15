@@ -160,7 +160,7 @@ public final class CursorAIService {
             return apiKey.trim();
         }
 
-        // 3. Env property (e.g., -Dcursor.api.key=xxx)
+        // 3. System property (e.g., -Dcursor.api.key=xxx)
         apiKey = System.getProperty("cursor.api.key");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             return apiKey.trim();
