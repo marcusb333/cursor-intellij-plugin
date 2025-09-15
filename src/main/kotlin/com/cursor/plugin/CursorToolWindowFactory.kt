@@ -1,11 +1,11 @@
-package com.cursor.plugin;
+package com.cursor.plugin
 
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentFactory;
-import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.content.Content
+import com.intellij.ui.content.ContentFactory
+import org.jetbrains.annotations.NotNull
 
 /**
  * Factory class for creating and managing the Cursor AI tool window in IntelliJ IDEA.
@@ -48,12 +48,11 @@ import org.jetbrains.annotations.NotNull;
  * @see OpenCursorAIAction
  * @see com.intellij.openapi.wm.ToolWindowFactory
  */
-public class CursorToolWindowFactory implements ToolWindowFactory {
+class CursorToolWindowFactory : ToolWindowFactory {
     
-    @Override
-    public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        CursorChatPanel chatPanel = new CursorChatPanel(project);
-        Content content = ContentFactory.getInstance().createContent(chatPanel, "", false);
-        toolWindow.getContentManager().addContent(content);
+    override fun createToolWindowContent(@NotNull project: Project, @NotNull toolWindow: ToolWindow) {
+        val chatPanel = CursorChatPanel.create(project)
+        val content = ContentFactory.getInstance().createContent(chatPanel, "", false)
+        toolWindow.contentManager.addContent(content)
     }
 }

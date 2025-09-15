@@ -143,14 +143,14 @@ See [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md) for detailed information.
 ### Project Structure
 
 ```
-src/main/java/com/cursor/plugin/
-├── CursorPlugin.java              # Main plugin class
-├── CursorAIService.java           # AI service integration
-├── CursorToolWindowFactory.java   # Tool window factory
-├── CursorChatPanel.java           # Chat UI panel
-├── OpenCursorAIAction.java        # Action to open AI panel
-├── GenerateCodeAction.java        # Code generation action
-└── ExplainCodeAction.java         # Code explanation action
+src/main/kotlin/com/cursor/plugin/
+├── CursorPlugin.kt                # Main plugin class
+├── CursorAIService.kt             # AI service integration
+├── CursorToolWindowFactory.kt     # Tool window factory
+├── CursorChatPanel.kt              # Chat UI panel
+├── OpenCursorAIAction.kt           # Action to open AI panel
+├── GenerateCodeAction.kt           # Code generation action
+└── ExplainCodeAction.kt            # Code explanation action
 ```
 
 ### Building and Testing
@@ -177,7 +177,7 @@ src/main/java/com/cursor/plugin/
 
 ### Technology Stack
 
-- **Language**: Java 17
+- **Language**: Kotlin (JVM target)
 - **Build Tool**: Gradle 8.14
 - **IntelliJ Platform**: 2024.3
 - **HTTP Client**: OkHttp 4.12.0
@@ -229,9 +229,10 @@ The plugin communicates with Cursor's API using the following endpoint:
 
 ### Code Style
 
-- Follow Java conventions
+- Follow Kotlin conventions
 - Use meaningful variable and method names
-- Add JavaDoc comments for public methods
+- Add KDoc comments for public methods
+- Use companion objects for factory methods
 - Maintain test coverage for new features
 
 ## Troubleshooting
