@@ -8,10 +8,52 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Core service class that handles communication with the Cursor AI API.
+ *
+ * <p>This service provides the main interface for sending requests to the Cursor AI API
+ * and processing responses. It manages HTTP connections, API authentication, and handles
+ * both successful responses and error conditions gracefully.</p>
+ *
+ * <p>Key features include:</p>
+ * <ul>
+ *   <li>Asynchronous API communication using OkHttp client</li>
+ *   <li>Multiple API key configuration methods (environment variables, system properties)</li>
+ *   <li>Robust error handling and user-friendly error messages</li>
+ *   <li>JSON request/response processing with Gson</li>
+ *   <li>Configurable timeouts for reliable operation</li>
+ * </ul>
+ *
+ * <p>API Key Configuration:</p>
+ * <p>The service supports multiple methods for providing the Cursor API key:</p>
+ * <ol>
+ *   <li>Environment variable: {@code CURSOR_API_KEY}</li>
+ *   <li>Environment variable: {@code cursor_api_key}</li>
+ *   <li>System property: {@code cursor.api.key}</li>
+ * </ol>
+ *
+ * <p>Usage example:</p>
+ * <pre>{@code
+ * CursorAIService service = CursorAIService.getInstance(project);
+ * service.sendMessage("Explain this code", codeContext, new CursorAIResponseCallback() {
+ *     public void onSuccess(String response) {
+ *         // Handle successful response
+ *     }
+ *     public void onError(String error) {
+ *         // Handle error
+ *     }
+ * });
+ * }</pre>
+ *
+ * @author Cursor AI Plugin Team
+ * @version 0.0.4
+ * @since 1.0
+ * @see CursorAIResponseCallback
+ * @see Service
+ */
 @Service
 public final class CursorAIService {
     private static final String CURSOR_API_URL = "https://api.cursor.com/v1/chat/completions";
-    private static final String API_KEY_PROPERTY = "cursor.api.key";
 
     private final Project project;
     private final OkHttpClient httpClient;
@@ -102,24 +144,24 @@ public final class CursorAIService {
             }
         });
     }
-    
+
     String getApiKey() {
         // Try multiple sources for the API key, in order of preference:
 
-        // 1. System property (e.g., -Dcursor.api.key=xxx)
-        String apiKey = System.getProperty("cursor.api.key");
+        // 1. Environment variable CURSOR_API_KEY
+        String apiKey = System.getenv("CURSOR_API_KEY");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             return apiKey.trim();
         }
 
-        // 2. Environment variable CURSOR_API_KEY
-        apiKey = System.getenv("CURSOR_API_KEY");
-        if (apiKey != null && !apiKey.trim().isEmpty()) {
-            return apiKey.trim();
-        }
-
-        // 3. Alternative environment variable (lowercase)
+        // 2. Alternative environment variable (lowercase)
         apiKey = System.getenv("cursor_api_key");
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
+            return apiKey.trim();
+        }
+
+        // 3. System property (e.g., -Dcursor.api.key=xxx)
+        apiKey = System.getProperty("cursor.api.key");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             return apiKey.trim();
         }
@@ -131,6 +173,19 @@ public final class CursorAIService {
         return null; // No API key found
     }
     
+    /**
+     * Callback interface for handling responses from the Cursor AI API.
+     *
+     * <p>This interface defines the contract for handling both successful responses
+     * and error conditions when communicating with the Cursor AI service. Implementations
+     * should handle both success and error cases appropriately.</p>
+     *
+     * <p>The callback methods are invoked asynchronously on the HTTP client's thread pool,
+     * so implementations may need to switch to the EDT (Event Dispatch Thread) for UI updates.</p>
+     *
+     * @since 1.0
+     * @see CursorAIService#sendMessage(String, String, CursorAIResponseCallback)
+     */
     public interface CursorAIResponseCallback {
         void onSuccess(String response);
         void onError(String error);

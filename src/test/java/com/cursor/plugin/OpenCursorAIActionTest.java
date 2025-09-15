@@ -11,6 +11,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.Mockito.*;
 
+/**
+ * Test class for {@link OpenCursorAIAction}.
+ * 
+ * This class contains unit tests for the OpenCursorAIAction, covering:
+ * <ul>
+ *   <li>Action execution with valid and null projects</li>
+ *   <li>Action update behavior based on project availability</li>
+ *   <li>Presentation state management (enabled/disabled)</li>
+ * </ul>
+ * 
+ * Tests verify that the action handles edge cases gracefully and properly
+ * manages its enabled state based on project context.
+ * 
+ * @author Cursor Plugin Team
+ * @since 1.0.0
+ */
 @ExtendWith(MockitoExtension.class)
 class OpenCursorAIActionTest {
 
