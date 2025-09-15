@@ -17,6 +17,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test class for {@link ExplainCodeAction}.
+ * 
+ * This class contains unit tests for the ExplainCodeAction, covering:
+ * <ul>
+ *   <li>Code explanation with valid text selection</li>
+ *   <li>Handling of no text selection scenarios</li>
+ *   <li>Action update behavior based on selection availability</li>
+ *   <li>Integration with CursorAIService for code explanation</li>
+ * </ul>
+ * 
+ * Tests verify that the action properly validates text selection and
+ * provides appropriate user feedback when no code is selected.
+ * 
+ * @author Cursor Plugin Team
+ * @since 1.0.0
+ */
 @ExtendWith(MockitoExtension.class)
 class ExplainCodeActionTest {
 

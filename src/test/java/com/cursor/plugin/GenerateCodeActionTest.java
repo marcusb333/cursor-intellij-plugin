@@ -18,6 +18,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test class for {@link GenerateCodeAction}.
+ * 
+ * This class contains unit tests for the GenerateCodeAction, covering:
+ * <ul>
+ *   <li>Code generation with valid user input</li>
+ *   <li>Handling of cancelled user input</li>
+ *   <li>Action update behavior based on project and editor availability</li>
+ *   <li>Integration with CursorAIService for code generation</li>
+ * </ul>
+ * 
+ * Tests verify that the action properly interacts with the AI service and
+ * handles user input scenarios correctly.
+ * 
+ * @author Cursor Plugin Team
+ * @since 1.0.0
+ */
 @ExtendWith(MockitoExtension.class)
 class GenerateCodeActionTest {
 

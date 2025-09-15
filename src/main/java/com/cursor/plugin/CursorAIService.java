@@ -148,7 +148,7 @@ public final class CursorAIService {
     }
 
     @VisibleForTesting
-    private String getApiKey() {
+    String getApiKey() {
         // Try multiple sources for the API key, in order of preference:
 
         // 1. Environment variable CURSOR_API_KEY
