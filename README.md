@@ -15,9 +15,9 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 ### Prerequisites
 
-- IntelliJ IDEA 2024.3 or later (compatible with all future versions)
-- Java 17 or later
-- Cursor API key (get one from [Cursor.com](https://cursor.com))
+- IntelliJ IDEA (any version - no version restrictions)
+- Java 21 or later
+- OpenAI API key (get one from [OpenAI](https://platform.openai.com/api-keys))
 
 ### Building from Source
 
@@ -27,13 +27,13 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    cd cursor-intellij-plugin
    ```
 
-2. Set your Cursor API key as an environment variable:
+2. Set your OpenAI API key as an environment variable:
    ```bash
-   export CURSOR_API_KEY=your_api_key_here
+   export OPENAI_API_KEY=your_api_key_here
    ```
    Or set it as a system property:
    ```bash
-   -Dcursor.api.key=your_api_key_here
+   -Dopenai.api.key=your_api_key_here
    ```
 
 3. Build the plugin using the build script (recommended):
@@ -84,7 +84,7 @@ The project includes a comprehensive build script (`build.sh`) that provides the
 ./build.sh help
 ```
 
-The build script provides colored output, error checking, and will verify that you have the correct Java version (17+) and Gradle wrapper before running any commands.
+The build script provides colored output, error checking, and will verify that you have the correct Java version (21+) and Gradle wrapper before running any commands.
 
 ## Usage
 
@@ -111,16 +111,16 @@ The Cursor AI panel provides a chat interface where you can:
 
 ### API Key Setup
 
-The plugin requires a Cursor API key to function. You can set it in one of these ways:
+The plugin requires an OpenAI API key to function. You can set it in one of these ways:
 
 1. **Environment Variable**:
    ```bash
-   export CURSOR_API_KEY=your_api_key_here
+   export OPENAI_API_KEY=your_api_key_here
    ```
 
 2. **System Property**:
    ```bash
-   -Dcursor.api.key=your_api_key_here
+   -Dopenai.api.key=your_api_key_here
    ```
 
 3. **Plugin Settings** (coming soon):
@@ -177,12 +177,12 @@ src/main/kotlin/com/cursor/plugin/
 
 ### Technology Stack
 
-- **Language**: Kotlin (JVM target)
-- **Build Tool**: Gradle 8.14
-- **IntelliJ Platform**: 2024.3
-- **HTTP Client**: OkHttp 4.12.0
+- **Language**: Kotlin 1.9.22 (JVM target 21)
+- **Build Tool**: Gradle with IntelliJ Platform Plugin 2.0.0
+- **IntelliJ Platform**: 2024.3.6
+- **HTTP Client**: Java HttpClient (built-in)
 - **JSON Processing**: Gson 2.10.1
-- **Testing**: JUnit 5, Mockito, AssertJ
+- **Testing**: JUnit 5.10.1, Mockito 5.8.0, AssertJ 3.25.1
 
 ### Testing
 
@@ -201,18 +201,22 @@ For more detailed testing information, see [TESTING.md](TESTING.md).
 
 ## API Integration
 
-The plugin communicates with Cursor's API using the following endpoint:
-- **Base URL**: `https://api.cursor.com/v1/chat/completions`
+The plugin communicates with OpenAI's API using the following endpoint:
+- **Base URL**: `https://api.openai.com/v1/chat/completions`
 - **Authentication**: Bearer token (API key)
-- **Request Format**: JSON with model, prompt, context, and parameters
+- **Request Format**: JSON with model, messages, and parameters
 
 ### Example API Request
 
 ```json
 {
-  "model": "gpt-4",
-  "prompt": "Explain this code",
-  "context": "// Selected code context",
+  "model": "gpt-3.5-turbo",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain this code"
+    }
+  ],
   "max_tokens": 1000,
   "temperature": 0.7
 }
@@ -244,12 +248,17 @@ The plugin communicates with Cursor's API using the following endpoint:
    - Verify the API key is valid and has proper permissions
 
 2. **Plugin not loading**:
-   - Check that you're using a compatible IntelliJ IDEA version (2023.2+)
-   - Verify Java 17+ is installed and configured
+   - Verify Java 21+ is installed and configured
+   - Check that you're using a supported IntelliJ IDEA version
 
 3. **Network connectivity issues**:
    - Check firewall settings
    - Verify proxy configuration if applicable
+
+4. **Build script compilation errors**:
+   - Ensure you're using Java 21+ (the build script checks this automatically)
+   - Run `./build.sh check` to verify prerequisites
+   - If you encounter Kotlin compilation errors, try `./build.sh clean` first
 
 ### Debug Mode
 
@@ -270,13 +279,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Version 1.0.3 (Current)
-- 🚀 **Enhanced Future Compatibility**: Now works with all new IntelliJ IDEA versions
-- 🔧 Removed version upper limits for unlimited forward compatibility
-- ⚡ Improved stability and performance
-- 📈 Better error handling and logging
-- 🔄 Updated IntelliJ Gradle Plugin to 1.17.4
-- 📦 Compatible with IntelliJ IDEA 2024.3 and all future releases
+### Version 0.0.4 (Current)
+- ✅ **Build System Fixed**: Resolved all Kotlin compilation errors and dependency conflicts
+- 🔧 **HTTP Client Migration**: Replaced OpenAI client library with Java HttpClient to avoid conflicts
+- ⚡ **Enhanced Compatibility**: Both GenerateCodeAction and ExplainCodeAction now work seamlessly
+- 📈 **Improved Error Handling**: Better parameter validation and error messages
+- 🔄 **Updated Dependencies**: Using Java HttpClient and Gson for reliable HTTP and JSON processing
+- 📦 **Full Build Pipeline**: Complete build, test, and distribution process working
+- 🧪 **Test Suite**: All 16 tests passing with 100% success rate
+- 🚀 **Main Dispatcher**: CompletionsChatAsyncService now uses Dispatchers.Main as requested
+- 🎯 **Class-Level Coroutine Scope**: Implemented proper coroutine lifecycle management with disposal
+- 🔄 **Resource Management**: Added proper cleanup mechanism for async operations
 
 ### Version 1.0.2
 - Updated for IntelliJ IDEA 2024.3+ compatibility

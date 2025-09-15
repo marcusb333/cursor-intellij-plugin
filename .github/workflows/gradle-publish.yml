@@ -11,6 +11,7 @@ on:
   push:
     branches:
     - main
+    - cleanup/*
     - release/*
   pull_request:
     branches:
@@ -34,13 +35,33 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
-    - name: Test with Gradle
-      run: ./gradlew clean test --no-configuration-cache --no-daemon --tests "*CursorAIServiceTest*"
-
-    - name: Build Plugin with Gradle
-      run: ./gradlew buildPlugin --no-configuration-cache --no-daemon
+    
+    - name: Make build script executable
+      run: chmod +x ./build.sh
+    
+    - name: Check prerequisites
+      run: ./build.sh check
+    
+    - name: Run tests
+      run: ./build.sh test
+    
+    - name: Build plugin
+      run: ./build.sh build
+    
+    - name: Create distribution
+      run: ./build.sh dist
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cursor-intellij-plugin-${{ github.sha }}
+        path: |
+          build/libs/*.jar
+          build/distributions/*.zip
+        retention-days: 30
+    
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
-    # the publishing section of your build.gradle
+    # the publishing section of your build.gradle.kts
     # - name: Publish to GitHub Packages
     #   run: ./gradlew publish
     #   env:
