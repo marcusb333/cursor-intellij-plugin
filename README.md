@@ -290,6 +290,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🚀 **Main Dispatcher**: CompletionsChatAsyncService now uses Dispatchers.Main as requested
 - 🎯 **Class-Level Coroutine Scope**: Implemented proper coroutine lifecycle management with disposal
 - 🔄 **Resource Management**: Added proper cleanup mechanism for async operations
+- 📝 **PR Description Generator**: New action to generate pull request descriptions using Cursor AI
 
 ### Version 1.0.2
 - Updated for IntelliJ IDEA 2024.3+ compatibility

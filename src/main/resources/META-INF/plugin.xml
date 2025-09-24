@@ -44,6 +44,7 @@
         <li>🔗 Direct OpenAI API integration with proper authentication</li>
         <li>🔄 Class-level coroutine scope with proper lifecycle management</li>
         <li>🧹 Resource cleanup and disposal mechanisms</li>
+        <li>📝 PR Description Generator with Cursor AI integration</li>
     </ul>
     <h3>Version 1.0.2</h3>
     <ul>
@@ -92,6 +93,14 @@
                 text="Explain Code with Cursor" 
                 description="Get explanation for selected code">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        
+        <action id="com.cursor.plugin.GeneratePRDescription" 
+                class="com.cursor.plugin.GeneratePRDescriptionAction" 
+                text="Generate PR Description" 
+                description="Generate pull request description using Cursor AI">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
         </action>
     </actions>
 </idea-plugin>
