@@ -144,13 +144,20 @@ See [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md) for detailed information.
 
 ```
 src/main/kotlin/com/cursor/plugin/
-├── CursorPlugin.kt                # Main plugin class
-├── CursorAIService.kt             # AI service integration
-├── CursorToolWindowFactory.kt     # Tool window factory
-├── CursorChatPanel.kt              # Chat UI panel
-├── OpenCursorAIAction.kt           # Action to open AI panel
-├── GenerateCodeAction.kt           # Code generation action
-└── ExplainCodeAction.kt            # Code explanation action
+├── CursorPlugin.kt                    # Main plugin class
+├── CompletionsChatAsyncService.kt     # AI service with coroutine support
+├── ChatServiceInterface.kt            # Service interface definition
+├── CursorToolWindowFactory.kt         # Tool window factory
+├── CursorChatPanel.kt                 # Chat UI panel
+├── CursorAIResponseCallback.kt        # Async response callback
+├── OpenCursorAIAction.kt              # Action to open AI panel
+├── GenerateCodeAction.kt              # Code generation action
+└── ExplainCodeAction.kt               # Code explanation action
+
+.github/
+├── pull_request_template.md           # Streamlined PR template
+└── workflows/
+    └── auto-fill-pr-description.yml   # AI-powered PR template auto-fill
 ```
 
 ### Building and Testing
@@ -279,33 +286,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Version 0.0.4 (Current)
-- ✅ **Build System Fixed**: Resolved all Kotlin compilation errors and dependency conflicts
-- 🔧 **HTTP Client Migration**: Replaced OpenAI client library with Java HttpClient to avoid conflicts
-- ⚡ **Enhanced Compatibility**: Both GenerateCodeAction and ExplainCodeAction now work seamlessly
+### Version 0.0.5 (Current)
+- 🚀 **Universal Compatibility**: Compatible with all IntelliJ IDEA versions (removed version restrictions)
+- 🔧 **Build System Improvements**: Fixed dependency conflicts and enhanced build pipeline
+- ⚡ **HTTP Client Migration**: Migrated to Java HttpClient for reliable HTTP communication
+- 📈 **Enhanced Error Handling**: Improved error handling and interface design
+- 🧪 **Comprehensive Testing**: All tests passing with full coverage
+- 🎯 **Coroutine Optimization**: CompletionsChatAsyncService uses Dispatchers.Main with proper lifecycle
+- 🔗 **OpenAI Integration**: Direct OpenAI API integration with proper authentication
+- 🔄 **Resource Management**: Class-level coroutine scope with proper cleanup and disposal
+- 📝 **GitHub Automation**: Streamlined PR template with AI-powered auto-fill workflow
+- 🗑️ **Code Cleanup**: Removed deprecated GeneratePRDescriptionAction
+- 🤖 **AI-Powered PRs**: GitHub Actions workflow intelligently populates PR templates using OpenAI
+- 🔄 **Template Intelligence**: Workflow analyzes code changes, commit messages, and diffs to generate contextual PR descriptions
+
+### Version 0.0.4
+- ✅ **Build System Fixed**: Resolved Kotlin compilation errors and dependency conflicts
+- 🔧 **HTTP Client Migration**: Initial migration from OpenAI client library
+- ⚡ **Enhanced Compatibility**: GenerateCodeAction and ExplainCodeAction working
 - 📈 **Improved Error Handling**: Better parameter validation and error messages
-- 🔄 **Updated Dependencies**: Using Java HttpClient and Gson for reliable HTTP and JSON processing
-- 📦 **Full Build Pipeline**: Complete build, test, and distribution process working
-- 🧪 **Test Suite**: All 16 tests passing with 100% success rate
-- 🚀 **Main Dispatcher**: CompletionsChatAsyncService now uses Dispatchers.Main as requested
-- 🎯 **Class-Level Coroutine Scope**: Implemented proper coroutine lifecycle management with disposal
-- 🔄 **Resource Management**: Added proper cleanup mechanism for async operations
-- 📝 **PR Description Generator**: New action to generate pull request descriptions using Cursor AI
-
-### Version 1.0.2
-- Updated for IntelliJ IDEA 2024.3+ compatibility
-- Improved Java 17 support
-- Enhanced stability and performance
-
-### Version 1.0.0
-- Initial release with core AI integration
-- Chat panel interface
-- Code generation and explanation actions
-- Context menu integration
-- Comprehensive test suite
-
-### Roadmap
-- Settings panel for API key configuration
-- Advanced code analysis features
-- Custom prompts and templates
-- Integration with more AI models
+- 📦 **Full Build Pipeline**: Complete build, test, and distribution process
+- 🧪 **Test Suite**: 16 tests passing with 100% success rate
+- 🚀 **Main Dispatcher**: CompletionsChatAsyncService using Dispatchers.Main
+- 🎯 **Coroutine Lifecycle**: Proper coroutine lifecycle management with disposal
+- 🔄 **Resource Management**: Cleanup mechanism for async operations
