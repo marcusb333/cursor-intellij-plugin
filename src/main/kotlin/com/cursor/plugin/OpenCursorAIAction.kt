@@ -2,10 +2,7 @@ package com.cursor.plugin
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
-import org.jetbrains.annotations.NotNull
 
 /**
  * IntelliJ IDEA action that opens the Cursor AI tool window for interactive chat.
@@ -49,17 +46,24 @@ import org.jetbrains.annotations.NotNull
  * @see com.intellij.openapi.actionSystem.AnAction
  */
 class OpenCursorAIAction : AnAction() {
-    
-    override fun actionPerformed(@NotNull e: AnActionEvent) {
+    @Throws(IllegalStateException::class)
+    override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        
+
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow = toolWindowManager.getToolWindow("Cursor AI")
-        
-        toolWindow?.show()
+        try {
+            toolWindow?.show(null) ?: run {
+                println("Cursor AI tool window not found.")
+                throw IllegalStateException("Cursor AI tool window not found.")
+            }
+        } catch (ex: Exception) {
+            // Log or handle the exception as needed
+            println("Error showing Cursor AI tool window: ${ex.message}")
+        }
     }
-    
-    override fun update(@NotNull e: AnActionEvent) {
+
+    override fun update(e: AnActionEvent) {
         e.presentation.isEnabled = e.project != null
     }
 }

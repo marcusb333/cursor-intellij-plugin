@@ -3,12 +3,13 @@ package com.cursor.plugin
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.ProgressIndicator
 import org.jetbrains.annotations.NotNull
-
-import javax.swing.*
+import javax.swing.SwingUtilities
 
 /**
  * IntelliJ IDEA action that provides AI-powered code generation functionality.
@@ -47,61 +48,82 @@ import javax.swing.*
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see CursorAIService
+ * @see CompletionsChatAsyncService
  * @see com.intellij.openapi.actionSystem.AnAction
  */
 class GenerateCodeAction : AnAction() {
-    
-    override fun actionPerformed(@NotNull e: AnActionEvent) {
+    override fun actionPerformed(
+        @NotNull e: AnActionEvent,
+    ) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)
-        
+
         if (project == null || editor == null) {
             return
         }
-        
-        val prompt = Messages.showInputDialog(
-            project,
-            "Describe the code you want to generate:",
-            "Generate Code with Cursor AI",
-            Messages.getQuestionIcon(),
-            "",
-            null
-        )
-        
+
+        val prompt =
+            Messages.showInputDialog(
+                project,
+                "Describe the code you want to generate:",
+                "Generate Code with Cursor AI",
+                Messages.getQuestionIcon(),
+                "",
+                null,
+            )
+
         if (!prompt.isNullOrBlank()) {
-            val aiService = CursorAIService.getInstance(project)
+            val aiService = CompletionsChatAsyncService.getInstance(project)
             val context = "Generate code for: $prompt"
-            
-            aiService.sendMessage(prompt, context, object : CursorAIService.CursorAIResponseCallback {
-                override fun onSuccess(response: String) {
-                    SwingUtilities.invokeLater {
-                        val result = Messages.showYesNoDialog(
-                            project,
-                            "Generated code:\n\n$response\n\nDo you want to insert this code at the cursor position?",
-                            "Code Generated",
-                            Messages.getQuestionIcon()
+
+            // Use IntelliJ's background task to call the service
+            ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating code...", true) {
+                override fun run(indicator: ProgressIndicator) {
+                    try {
+                        aiService.sendMessage(
+                            prompt,
+                            context,
+                            this@GenerateCodeAction,
+                            object : CursorAIResponseCallback {
+                                override fun onSuccess(response: String) {
+                                    SwingUtilities.invokeLater {
+                                        val result =
+                                            Messages.showYesNoDialog(
+                                                project,
+                                                "Generated code:\n\n$response\n\nDo you want to insert this code at the cursor position?",
+                                                "Code Generated",
+                                                Messages.getQuestionIcon(),
+                                            )
+
+                                        if (result == Messages.YES) {
+                                            editor.document.insertString(
+                                                editor.caretModel.offset,
+                                                response,
+                                            )
+                                        }
+                                    }
+                                }
+
+                                override fun onError(error: String) {
+                                    SwingUtilities.invokeLater {
+                                        Messages.showErrorDialog(project, "Error generating code: $error", "Error")
+                                    }
+                                }
+                            },
                         )
-                        
-                        if (result == Messages.YES) {
-                            editor.document.insertString(
-                                editor.caretModel.offset,
-                                response
-                            )
+                    } catch (e: Exception) {
+                        SwingUtilities.invokeLater {
+                            Messages.showErrorDialog(project, "Error generating code: ${e.message}", "Error")
                         }
-                    }
-                }
-                
-                override fun onError(error: String) {
-                    SwingUtilities.invokeLater {
-                        Messages.showErrorDialog(project, "Error generating code: $error", "Error")
                     }
                 }
             })
         }
     }
-    
-    override fun update(@NotNull e: AnActionEvent) {
+
+    override fun update(
+        @NotNull e: AnActionEvent,
+    ) {
         e.presentation.isEnabled = e.project != null && e.getData(CommonDataKeys.EDITOR) != null
     }
 }

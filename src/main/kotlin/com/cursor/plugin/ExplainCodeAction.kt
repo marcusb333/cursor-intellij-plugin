@@ -3,13 +3,12 @@ package com.cursor.plugin
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.SelectionModel
-import com.intellij.openapi.project.Project
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.ui.Messages
 import org.jetbrains.annotations.NotNull
-
-import javax.swing.*
+import javax.swing.SwingUtilities
 
 /**
  * IntelliJ IDEA action that provides AI-powered code explanation functionality.
@@ -40,12 +39,13 @@ import javax.swing.*
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see CursorAIService
+ * @see CompletionsChatAsyncService
  * @see com.intellij.openapi.actionSystem.AnAction
  */
 class ExplainCodeAction : AnAction() {
-
-    override fun actionPerformed(@NotNull e: AnActionEvent) {
+    override fun actionPerformed(
+        @NotNull e: AnActionEvent,
+    ) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)
 
@@ -60,39 +60,61 @@ class ExplainCodeAction : AnAction() {
             Messages.showWarningDialog(
                 project,
                 "Please select some code to explain.",
-                "No Code Selected"
+                "No Code Selected",
             )
             return
         }
 
-        val aiService = CursorAIService.getInstance(project)
+        val aiService = CompletionsChatAsyncService.getInstance(project)
         val prompt = "Please explain this code:\n\n$selectedText"
         val context = "Code explanation request"
 
-        aiService.sendMessage(prompt, context, object : CursorAIService.CursorAIResponseCallback {
-            override fun onSuccess(response: String) {
-                SwingUtilities.invokeLater {
-                    Messages.showMessageDialog(
-                        project,
-                        response,
-                        "Code Explanation",
-                        Messages.getInformationIcon()
-                    )
-                }
-            }
+        // Use IntelliJ's background task to call the service
+        ProgressManager.getInstance().run(
+            object : Task.Backgroundable(project, "Explaining code...", true) {
+                override fun run(indicator: ProgressIndicator) {
+                    try {
+                        aiService.sendMessage(
+                            message = prompt,
+                            context,
+                            action = this@ExplainCodeAction,
+                            callback =
+                                object : CursorAIResponseCallback {
+                                    override fun onSuccess(response: String) {
+                                        SwingUtilities.invokeLater {
+                                            Messages.showMessageDialog(
+                                                project,
+                                                response,
+                                                "Code Explanation",
+                                                Messages.getInformationIcon(),
+                                            )
+                                        }
+                                    }
 
-            override fun onError(error: String) {
-                SwingUtilities.invokeLater {
-                    Messages.showErrorDialog(project, "Error explaining code: $error", "Error")
+                                    override fun onError(error: String) {
+                                        SwingUtilities.invokeLater {
+                                            Messages.showErrorDialog(project, "Error explaining code: $error", "Error")
+                                        }
+                                    }
+                                },
+                        )
+                    } catch (e: Exception) {
+                        SwingUtilities.invokeLater {
+                            Messages.showErrorDialog(project, "Error explaining code: ${e.message}", "Error")
+                        }
+                    }
                 }
-            }
-        })
+            },
+        )
     }
 
-    override fun update(@NotNull e: AnActionEvent) {
+    override fun update(
+        @NotNull e: AnActionEvent,
+    ) {
         val editor = e.getData(CommonDataKeys.EDITOR)
-        val hasSelection = editor != null &&
-                          !editor.selectionModel.selectedText.isNullOrBlank()
+        val hasSelection =
+            editor != null &&
+                !editor.selectionModel.selectedText.isNullOrBlank()
 
         e.presentation.isEnabled = e.project != null && hasSelection
     }

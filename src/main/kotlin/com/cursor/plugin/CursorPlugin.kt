@@ -9,8 +9,8 @@ import org.jetbrains.annotations.NotNull
  * Main plugin class for the Cursor AI IntelliJ IDEA plugin.
  *
  * <p>This class serves as the entry point for the plugin and implements {@link StartupActivity}
- * to initialize the Cursor AI service when a project is opened. It ensures that the
- * {@link CursorAIService} is properly instantiated and ready to handle AI-powered code
+ * to initialize the CompletionsChatAsyncService when a project is opened. It ensures that the
+ * {@link CompletionsChatAsyncService} is properly instantiated and ready to handle AI-powered code
  * assistance requests.</p>
  *
  * <p>The plugin provides integration with Cursor AI API to offer features such as:</p>
@@ -23,14 +23,15 @@ import org.jetbrains.annotations.NotNull
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see CursorAIService
+ * @see CompletionsChatAsyncService
  * @see StartupActivity
  */
 @Service
 class CursorPlugin : StartupActivity {
-    
-    override fun runActivity(@NotNull project: Project) {
-        // Initialize Cursor AI service
-        CursorAIService.getInstance(project)
+    override fun runActivity(
+        @NotNull project: Project,
+    ) {
+        // Initialize CompletionsChatAsyncService
+        CompletionsChatAsyncService.getInstance(project)
     }
 }

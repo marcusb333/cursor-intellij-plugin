@@ -31,7 +31,7 @@ print_error() {
 
 # Wrapper for Gradle with common flags
 gradle_cmd() {
-    ./gradlew --stacktrace --no-daemon --no-configuration-cache "$@"
+    ./gradlew --stacktrace --no-daemon "$@"
 }
 
 # Function to check prerequisites
@@ -44,14 +44,14 @@ check_prerequisites() {
         JAVA_VERSION=$(echo "$JAVA_VER_STR" | awk -F '"' '{print $2}' | cut -d'.' -f1)
         if [[ -z "${JAVA_VERSION:-}" ]]; then
             print_warning "Unable to parse Java version from: $JAVA_VER_STR"
-        elif [ "$JAVA_VERSION" -ge 11 ]; then
+        elif [ "$JAVA_VERSION" -ge 21 ]; then
             print_success "Java runtime detected: $JAVA_VER_STR"
         else
-            print_error "Java 11+ required to run Gradle, found: $JAVA_VER_STR"
+            print_error "Java 21+ required to run Gradle, found: $JAVA_VER_STR"
             exit 1
         fi
     else
-        print_warning "Java runtime not found in PATH. If Gradle fails to start, install JDK 17 or 21."
+        print_warning "Java runtime not found in PATH. If Gradle fails to start, install JDK 21 or later."
     fi
 
     # Check Gradle wrapper
@@ -153,11 +153,11 @@ verify_plugin() {
 
 # Function to check for API key
 check_api_key() {
-    if [ -n "${CURSOR_API_KEY:-}" ]; then
-        print_success "CURSOR_API_KEY environment variable is set"
+    if [ -n "${OPENAI_API_KEY:-}" ]; then
+        print_success "OPENAI_API_KEY environment variable is set"
     else
-        print_warning "No API key configured. Set CURSOR_API_KEY environment variable or cursor.api.key system property"
-        print_status "Example: export CURSOR_API_KEY=your_api_key_here"
+        print_warning "No API key configured. Set OPENAI_API_KEY environment variable or cursor.api.key system property"
+        print_status "Example: export OPENAI_API_KEY=your_api_key_here"
     fi
 }
 

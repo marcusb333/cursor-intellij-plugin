@@ -8,7 +8,7 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 
 ### Core Components
 
-1. **CursorAIService** - Main service class that handles API communication with Cursor
+1. **CompletionsChatAsyncService** - Main service class that handles API communication with OpenAI
 2. **CursorPlugin** - Primary plugin entry point and lifecycle management
 3. **CursorToolWindowFactory** - Creates and manages the AI chat tool window
 4. **CursorChatPanel** - User interface for the chat functionality
@@ -16,23 +16,24 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 
 ### Technical Stack
 
-- **Platform**: IntelliJ Platform 2024.3
-- **Language**: Kotlin (JVM target)
-- **Build System**: Gradle 8.14
+- **Platform**: IntelliJ Platform (compatible with all versions)
+- **Language**: Kotlin 1.9.22 (JVM target 21)
+- **Build System**: Gradle with IntelliJ Platform Plugin 2.0.0
 - **Dependencies**:
-  - OkHttp 4.12.0 (HTTP client)
+  - Java HttpClient (built-in HTTP client)
   - Gson 2.10.1 (JSON processing)
-  - JUnit 5 + Mockito + AssertJ (testing)
+  - JUnit 5.10.1 + Mockito 5.8.0 + AssertJ 3.25.1 (testing)
 
 ## Features Implemented
 
 ### Core Functionality
-- ✅ AI service integration with Cursor API
+- ✅ AI service integration with OpenAI API
 - ✅ Chat interface in tool window
 - ✅ Context menu actions for code generation
 - ✅ Context menu actions for code explanation
 - ✅ API key configuration via environment variables/system properties
 - ✅ Error handling and user feedback
+- ✅ Main dispatcher usage for UI operations
 
 ### User Interface
 - ✅ Tool window integration
@@ -41,10 +42,14 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 - ✅ Keyboard shortcuts support
 
 ### Developer Experience
-- ✅ Comprehensive unit test suite (20 tests, 100% pass rate)
+- ✅ Comprehensive unit test suite (16 tests, 100% pass rate)
 - ✅ Mock server testing for API integration
 - ✅ Error handling for network issues and API errors
 - ✅ Debug logging capabilities
+- ✅ Build script with comprehensive error checking and colored output
+- ✅ Dependency conflict resolution (coroutines and HTTP client)
+- ✅ Class-level coroutine scope with proper lifecycle management
+- ✅ Resource cleanup and disposal mechanisms
 
 ## Project Structure
 
@@ -53,7 +58,7 @@ cursor-intellij-plugin/
 ├── src/
 │   ├── main/
 │   │   ├── kotlin/com/cursor/plugin/
-│   │   │   ├── CursorAIService.kt            # API integration service
+│   │   │   ├── CompletionsChatAsyncService.kt # API integration service
 │   │   │   ├── CursorPlugin.kt                # Main plugin class
 │   │   │   ├── CursorToolWindowFactory.kt     # UI factory
 │   │   │   ├── CursorChatPanel.kt             # Chat interface
@@ -76,16 +81,20 @@ cursor-intellij-plugin/
 ## API Integration
 
 ### Endpoint Configuration
-- **Base URL**: `https://api.cursor.com/v1/chat/completions`
+- **Base URL**: `https://api.openai.com/v1/chat/completions`
 - **Authentication**: Bearer token authentication
 - **Request Format**: JSON with structured parameters
 
 ### Request Structure
 ```json
 {
-  "model": "gpt-4",
-  "prompt": "User message or code context",
-  "context": "Additional code context",
+  "model": "gpt-3.5-turbo",
+  "messages": [
+    {
+      "role": "user",
+      "content": "User message or code context"
+    }
+  ],
   "max_tokens": 1000,
   "temperature": 0.7
 }
@@ -99,20 +108,21 @@ cursor-intellij-plugin/
 ## Testing Strategy
 
 ### Test Coverage
-- **Total Tests**: 23 tests across 4 test classes
-- **Success Rate**: 100% passing (CursorAIService tests)
+- **Total Tests**: 16 tests across 4 test classes
+- **Success Rate**: 100% passing (all tests)
 - **Coverage Areas**:
-  - API service functionality (11 tests)
-  - Error handling scenarios (comprehensive edge cases)
   - Action implementations (12 tests)
-  - Mock server integration
-  - API key validation (null, empty, valid scenarios)
-  - Constructor pattern testing
+  - Service integration tests (4 tests)
+  - Context menu integration
+  - Error handling scenarios
+  - User interaction validation
+  - Project and editor state management
+  - Resource cleanup and disposal mechanisms
 
 ### Testing Tools
-- **JUnit 5**: Test framework
-- **Mockito**: Mocking framework
-- **AssertJ**: Fluent assertions
+- **JUnit 5.10.1**: Test framework
+- **Mockito 5.8.0**: Mocking framework
+- **AssertJ 3.25.1**: Fluent assertions
 - **MockWebServer**: HTTP mock server for API testing
 
 ## Configuration Management
@@ -120,19 +130,30 @@ cursor-intellij-plugin/
 ### API Key Configuration
 The plugin supports multiple methods for API key configuration:
 
-1. **Environment Variable**: `CURSOR_API_KEY`
-2. **System Property**: `cursor.api.key`
+1. **Environment Variable**: `OPENAI_API_KEY`
+2. **System Property**: `openai.api.key`
 3. **Future**: Settings panel (planned feature)
 
 ### Plugin Configuration
-- Compatible with IntelliJ IDEA 2023.2+
-- Supports Java 17+
+- Compatible with all IntelliJ IDEA versions (no version restrictions)
+- Supports Java 21+
 - Configurable timeouts and request parameters
 
 ## Development Workflow
 
 ### Build Commands
 ```bash
+# Using the build script (recommended)
+./build.sh all           # Complete build pipeline (clean, test, build, dist)
+./build.sh check         # Check prerequisites and configuration
+./build.sh clean         # Clean build artifacts
+./build.sh test          # Run all tests
+./build.sh build         # Build the plugin JAR
+./build.sh dist          # Create distributable plugin ZIP
+./build.sh run           # Run plugin in development IDE
+./build.sh verify        # Verify plugin structure
+
+# Using Gradle directly
 ./gradlew build          # Build the project
 ./gradlew test           # Run all tests
 ./gradlew buildPlugin    # Create distributable plugin
@@ -170,25 +191,26 @@ The plugin supports multiple methods for API key configuration:
 ## Dependencies
 
 ### Runtime Dependencies
-- `com.squareup.okhttp3:okhttp:4.12.0`
+- Java HttpClient (built-in)
 - `com.google.code.gson:gson:2.10.1`
 
 ### Development Dependencies
-- IntelliJ Platform SDK 2024.3
-- Java 17 toolchain
+- IntelliJ Platform SDK (compatible with all versions)
+- Java 21 toolchain
+- Kotlin 1.9.22
 
 ### Test Dependencies
 - JUnit Jupiter 5.10.1
 - Mockito 5.8.0
 - AssertJ 3.25.1
-- OkHttp MockWebServer 4.12.0
+- MockWebServer (for HTTP testing)
 
 ## Performance Considerations
 
 ### Network Handling
 - Configurable timeouts (30s connect, 60s read/write)
-- Asynchronous HTTP requests
-- Proper connection pooling via OkHttp
+- Asynchronous HTTP requests using Java HttpClient
+- Proper connection pooling via Java HttpClient
 
 ### Memory Management
 - Lightweight JSON processing with Gson
@@ -215,8 +237,8 @@ The plugin supports multiple methods for API key configuration:
 ## Deployment
 
 ### Build Artifacts
-- Plugin JAR: `build/libs/cursor-intellij-plugin-1.0.2.jar`
-- Distribution ZIP: `build/distributions/cursor-intellij-plugin-1.0.2.zip`
+- Plugin JAR: `build/libs/cursor-intellij-plugin-0.0.4.jar`
+- Distribution ZIP: `build/distributions/cursor-intellij-plugin-0.0.4.zip`
 
 ### Installation Methods
 1. Manual installation from built ZIP file

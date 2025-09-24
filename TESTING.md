@@ -2,71 +2,60 @@
 
 ## Overview
 
-This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 20 tests achieving 100% pass rate.
+This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 16 tests achieving 100% pass rate.
 
 ## Test Architecture
 
 ### Testing Framework Stack
 
-- **JUnit 5** (Jupiter) - Core testing framework
-- **Mockito** - Mocking framework for unit tests
-- **AssertJ** - Fluent assertion library
+- **JUnit 5.10.1** (Jupiter) - Core testing framework
+- **Mockito 5.8.0** - Mocking framework for unit tests
+- **AssertJ 3.25.1** - Fluent assertion library
 - **MockWebServer** - HTTP server mocking for API integration tests
 
 ### Test Structure
 
 ```
 src/test/kotlin/com/cursor/plugin/
-├── CursorAIServiceTest.kt         # API service integration tests (11 tests)
-├── ExplainCodeActionTest.kt       # Code explanation action tests
-├── GenerateCodeActionTest.kt      # Code generation action tests
-└── OpenCursorAIActionTest.kt      # Panel opening action tests
+├── CompletionsChatAsyncServiceIntegrationTest.kt # Service integration tests (8 tests)
+├── ExplainCodeActionTest.kt       # Code explanation action tests (4 tests)
+├── GenerateCodeActionTest.kt      # Code generation action tests (4 tests)
+└── OpenCursorAIActionTest.kt      # Panel opening action tests (4 tests)
 ```
 
 ## Test Categories
 
 ### 1. Unit Tests
 
-**CursorAIServiceTest** - Core API integration testing
-- ✅ Service instance creation and retrieval
-- ✅ API communication with valid credentials
-- ✅ Error handling for missing API keys
-- ✅ Error handling for empty API keys
-- ✅ Network error handling (401, 500 errors)
-- ✅ Malformed response parsing
-- ✅ Empty response handling
-- ✅ Server error scenarios
-- ✅ Constructor pattern testing with companion objects
-- ✅ Factory method testing for test instances
-- ✅ API key validation from multiple sources
-
 **Action Tests** - UI action functionality
 - ✅ Context menu action registration
 - ✅ Action execution and error handling
 - ✅ User interaction scenarios
+- ✅ Project and editor state validation
+- ✅ Error handling for invalid inputs
+- ✅ Action availability based on context
 
 ### 2. Integration Tests
 
-- **Mock Server Testing**: Uses OkHttp MockWebServer to simulate API responses
-- **Error Scenario Testing**: Validates proper error handling for various failure modes
-- **Timeout Testing**: Ensures proper handling of network timeouts
+- **Action Integration**: Tests actions within IntelliJ's action system
+- **UI Integration**: Validates proper integration with IntelliJ's UI components
+- **Context Integration**: Tests actions in various editor contexts
+
 
 ## Running Tests
 
 ### Command Line
 
 ```bash
-# Run all tests
-./gradlew test
+# Using the build script (recommended)
+./build.sh test          # Run all tests with colored output
+./build.sh all           # Complete pipeline including tests
 
-# Run specific test class
-./gradlew test --tests CursorAIServiceTest
-
-# Run tests with detailed output
-./gradlew test --info
-
-# Run tests and generate coverage report
-./gradlew test jacocoTestReport
+# Using Gradle directly
+./gradlew test           # Run all tests
+./gradlew test --tests ExplainCodeActionTest    # Run specific test class
+./gradlew test --info    # Run tests with detailed output
+./gradlew test jacocoTestReport    # Run tests and generate coverage report
 ```
 
 ### IDE Integration
@@ -95,7 +84,7 @@ Located in `src/test/resources/test.properties`:
 
 ## Detailed Test Descriptions
 
-### CursorAIServiceTest
+### CompletionsChatAsyncServiceIntegrationTest
 
 #### testGetInstance()
 - **Purpose**: Verify service instance retrieval from IntelliJ's service container
@@ -103,7 +92,7 @@ Located in `src/test/resources/test.properties`:
 - **Assertions**: Service instance is not null and correct type
 
 #### testSendMessageWithValidApiKey()
-- **Purpose**: Test successful API communication
+- **Purpose**: Test successful API communication with OpenAI
 - **Setup**: 
   - Sets API key via system property
   - Configures mock server with valid JSON response
@@ -168,7 +157,7 @@ The tests now use Mockito spies instead of environment variable manipulation to 
 fun setUp() {
     mockServer = MockWebServer()
     mockServer.start()
-    aiService = CursorAIService.createForTesting(mockProject, mockServer.url("/").toString())
+    aiService = CompletionsChatAsyncService.createForTesting(mockProject, mockServer.url("/").toString())
     spyService = spy(aiService)  // Create spy for mocking
 }
 
@@ -216,7 +205,7 @@ assertThat(request.getHeader("Authorization")).isEqualTo("Bearer test-api-key")
 val latch = CountDownLatch(1)
 val result = AtomicReference<String>()
 
-val callback = object : CursorAIService.CursorAIResponseCallback {
+val callback = object : CursorAIResponseCallback {
     override fun onSuccess(response: String) {
         result.set(response)
         latch.countDown()
@@ -385,8 +374,8 @@ open build/reports/jacoco/test/html/index.html
 ## Test Environment
 
 ### System Requirements
-- Java 17+
-- Gradle 8.14+
+- Java 21+
+- Gradle with IntelliJ Platform Plugin 2.0.0
 - Internet connection for dependency download
 - Available ports for MockWebServer
 
