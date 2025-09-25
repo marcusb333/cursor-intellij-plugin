@@ -1,4 +1,4 @@
-package com.cursor.plugin.service
+package com.cursor.plugin
 
 interface CursorAIResponseCallback {
     fun onSuccess(response: String)

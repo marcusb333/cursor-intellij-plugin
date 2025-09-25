@@ -1,6 +1,5 @@
 package com.cursor.plugin
 
-import com.cursor.plugin.service.CursorAIResponseCallback
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
 import org.junit.jupiter.api.AfterEach

@@ -1,16 +1,15 @@
 package com.cursor.plugin
 
-import com.cursor.plugin.actions.GenerateCodeAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.CaretModelImpl
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -20,6 +19,7 @@ import org.mockito.ArgumentMatchers.eq
 import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mock
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.lenient
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
@@ -28,7 +28,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 
 /**
- * Test class for [com.cursor.plugin.actions.GenerateCodeAction].
+ * Test class for [GenerateCodeAction].
  *
  * This class contains unit tests for the GenerateCodeAction, covering:
  * - Code generation with valid user input
@@ -87,7 +87,7 @@ class GenerateCodeActionTest {
         val mockProgressManager = mock(ProgressManager::class.java)
         mockStatic(ProgressManager::class.java).use { progressManagerMock ->
             progressManagerMock.`when`<ProgressManager> { ProgressManager.getInstance() }.thenReturn(mockProgressManager)
-
+            
             doAnswer { invocation ->
                 val task = invocation.getArgument<Task.Backgroundable>(0)
                 // Simulate running the task immediately

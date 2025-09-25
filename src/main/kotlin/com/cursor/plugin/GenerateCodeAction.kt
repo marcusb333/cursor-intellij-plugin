@@ -1,14 +1,13 @@
-package com.cursor.plugin.actions
+package com.cursor.plugin
 
-import com.cursor.plugin.CompletionsChatAsyncService
-import com.cursor.plugin.service.CursorAIResponseCallback
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.progress.ProgressIndicator
 import org.jetbrains.annotations.NotNull
 import javax.swing.SwingUtilities
 
@@ -49,8 +48,8 @@ import javax.swing.SwingUtilities
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see com.cursor.plugin.CompletionsChatAsyncService
- * @see AnAction
+ * @see CompletionsChatAsyncService
+ * @see com.intellij.openapi.actionSystem.AnAction
  */
 class GenerateCodeAction : AnAction() {
     override fun actionPerformed(
@@ -74,53 +73,51 @@ class GenerateCodeAction : AnAction() {
             )
 
         if (!prompt.isNullOrBlank()) {
-            val aiService = CompletionsChatAsyncService.Companion.getInstance(project)
+            val aiService = CompletionsChatAsyncService.getInstance(project)
             val context = "Generate code for: $prompt"
 
             // Use IntelliJ's background task to call the service
-            ProgressManager.getInstance().run(
-                object : Task.Backgroundable(project, "Generating code...", true) {
-                    override fun run(indicator: ProgressIndicator) {
-                        try {
-                            aiService.sendMessage(
-                                prompt,
-                                context,
-                                this@GenerateCodeAction,
-                                object : CursorAIResponseCallback {
-                                    override fun onSuccess(response: String) {
-                                        SwingUtilities.invokeLater {
-                                            val result =
-                                                Messages.showYesNoDialog(
-                                                    project,
-                                                    "Generated code:\n\n$response\n\nDo you want to insert this code at the cursor position?",
-                                                    "Code Generated",
-                                                    Messages.getQuestionIcon(),
-                                                )
+            ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating code...", true) {
+                override fun run(indicator: ProgressIndicator) {
+                    try {
+                        aiService.sendMessage(
+                            prompt,
+                            context,
+                            this@GenerateCodeAction,
+                            object : CursorAIResponseCallback {
+                                override fun onSuccess(response: String) {
+                                    SwingUtilities.invokeLater {
+                                        val result =
+                                            Messages.showYesNoDialog(
+                                                project,
+                                                "Generated code:\n\n$response\n\nDo you want to insert this code at the cursor position?",
+                                                "Code Generated",
+                                                Messages.getQuestionIcon(),
+                                            )
 
-                                            if (result == Messages.YES) {
-                                                editor.document.insertString(
-                                                    editor.caretModel.offset,
-                                                    response,
-                                                )
-                                            }
+                                        if (result == Messages.YES) {
+                                            editor.document.insertString(
+                                                editor.caretModel.offset,
+                                                response,
+                                            )
                                         }
                                     }
+                                }
 
-                                    override fun onError(error: String) {
-                                        SwingUtilities.invokeLater {
-                                            Messages.showErrorDialog(project, "Error generating code: $error", "Error")
-                                        }
+                                override fun onError(error: String) {
+                                    SwingUtilities.invokeLater {
+                                        Messages.showErrorDialog(project, "Error generating code: $error", "Error")
                                     }
-                                },
-                            )
-                        } catch (e: Exception) {
-                            SwingUtilities.invokeLater {
-                                Messages.showErrorDialog(project, "Error generating code: ${e.message}", "Error")
-                            }
+                                }
+                            },
+                        )
+                    } catch (e: Exception) {
+                        SwingUtilities.invokeLater {
+                            Messages.showErrorDialog(project, "Error generating code: ${e.message}", "Error")
                         }
                     }
-                },
-            )
+                }
+            })
         }
     }
 

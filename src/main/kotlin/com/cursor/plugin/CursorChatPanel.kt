@@ -1,9 +1,5 @@
-package com.cursor.plugin.view
+package com.cursor.plugin
 
-import com.cursor.plugin.CompletionsChatAsyncService
-import com.cursor.plugin.service.CursorAIResponseCallback
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.ui.Gray
@@ -15,8 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.awt.BorderLayout
-import java.awt.Container
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
@@ -70,7 +66,7 @@ import javax.swing.SwingUtilities
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see com.cursor.plugin.CompletionsChatAsyncService
+ * @see CompletionsChatAsyncService
  * @see CursorToolWindowFactory
  * @see javax.swing.JPanel
  */
@@ -97,7 +93,7 @@ class CursorChatPanel private constructor(
     private val aiService: CompletionsChatAsyncService
 
     init {
-        this.aiService = CompletionsChatAsyncService.Companion.getInstance(project)
+        this.aiService = CompletionsChatAsyncService.getInstance(project)
 
         layout = BorderLayout()
         border = JBUI.Borders.empty(10)
@@ -217,31 +213,29 @@ class CursorChatPanel private constructor(
             // Send to AI
             appendToChat("🤖 Cursor AI: ")
             // Use callback-based approach
-            val dummyAction =
-                object : AnAction() {
-                    override fun actionPerformed(e: AnActionEvent) {
-                        // This is just a dummy action for the service call
-                    }
+            val dummyAction = object : com.intellij.openapi.actionSystem.AnAction() {
+                override fun actionPerformed(e: com.intellij.openapi.actionSystem.AnActionEvent) {
+                    // This is just a dummy action for the service call
                 }
-
+            }
+            
             aiService.sendMessage(
                 message = message,
                 context = context,
                 action = dummyAction,
-                callback =
-                    object : CursorAIResponseCallback {
-                        override fun onSuccess(response: String) {
-                            SwingUtilities.invokeLater {
-                                appendToChat("$response\n\n")
-                            }
+                callback = object : CursorAIResponseCallback {
+                    override fun onSuccess(response: String) {
+                        SwingUtilities.invokeLater {
+                            appendToChat("$response\n\n")
                         }
+                    }
 
-                        override fun onError(error: String) {
-                            SwingUtilities.invokeLater {
-                                appendToChat("❌ Error: $error\n\n")
-                            }
+                    override fun onError(error: String) {
+                        SwingUtilities.invokeLater {
+                            appendToChat("❌ Error: $error\n\n")
                         }
-                    },
+                    }
+                }
             )
         }
     }

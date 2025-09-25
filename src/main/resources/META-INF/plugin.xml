@@ -64,12 +64,12 @@
                    secondary="true" 
                    icon="/icons/cursor-icon.png" 
                    anchor="right" 
-                   factoryClass="com.cursor.plugin.view.CursorToolWindowFactory"/>
+                   factoryClass="com.cursor.plugin.CursorToolWindowFactory"/>
     </extensions>
 
     <actions>
         <action id="com.cursor.plugin.OpenCursorAI" 
-                class="com.cursor.plugin.actions.OpenCursorAIAction"
+                class="com.cursor.plugin.OpenCursorAIAction" 
                 text="Open Cursor AI" 
                 description="Open the Cursor AI assistant">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
@@ -77,14 +77,14 @@
         </action>
         
         <action id="com.cursor.plugin.GenerateCode" 
-                class="com.cursor.plugin.actions.GenerateCodeAction"
+                class="com.cursor.plugin.GenerateCodeAction" 
                 text="Generate Code with Cursor" 
                 description="Generate code using Cursor AI">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         
         <action id="com.cursor.plugin.ExplainCode" 
-                class="com.cursor.plugin.actions.ExplainCodeAction"
+                class="com.cursor.plugin.ExplainCodeAction" 
                 text="Explain Code with Cursor" 
                 description="Get explanation for selected code">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
