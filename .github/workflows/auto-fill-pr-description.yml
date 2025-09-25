@@ -71,9 +71,10 @@ jobs:
           ')
           
           # Get diff content (limited to prevent API overload)
+          MAX_DIFF_CONTENT_LENGTH=8000
           diff_content=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github.diff" \
-            "https://api.github.com/repos/${repo}/pulls/${pr_number}" | head -c 8000)
+            "https://api.github.com/repos/${repo}/pulls/${pr_number}" | head -c $MAX_DIFF_CONTENT_LENGTH)
           
           # Save data to files for next step
           echo "$title" > pr_title.txt
