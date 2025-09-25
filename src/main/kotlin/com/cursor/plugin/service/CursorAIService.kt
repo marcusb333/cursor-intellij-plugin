@@ -1,12 +1,9 @@
-package com.cursor.plugin
+package com.cursor.plugin.service
 
 import com.cursor.plugin.agent.Agent
+import com.cursor.plugin.api.CursorApiService
 import com.cursor.plugin.api.KtorClient
-import com.cursor.plugin.api.OpenAIApiService
-import com.cursor.plugin.api.models.ChatMessage
 import com.cursor.plugin.api.models.ChatRequest
-import com.cursor.plugin.service.ChatServiceInterface
-import com.cursor.plugin.service.CursorAIResponseCallback
 import com.cursor.plugin.util.ServiceHelper.getApiKey
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.components.Service
@@ -17,19 +14,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 @Service(Service.Level.PROJECT)
-class CompletionsChatAsyncService(
-    val project: Project,
+class CursorAIService(
+    private val project: Project,
 ) : ChatServiceInterface {
+    companion object {
+        fun getInstance(project: Project): CursorAIService = project.getService(CursorAIService::class.java)
+    }
+
     // Class-level coroutine scope for managing all async operations
     private val serviceJob = SupervisorJob()
     internal val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     private val httpClient = KtorClient.createHttpClient()
-    private val openAIApiService = OpenAIApiService(httpClient)
-
-    companion object {
-        fun getInstance(project: Project): CompletionsChatAsyncService = project.getService(CompletionsChatAsyncService::class.java)
-    }
+    private val cursorApiService = CursorApiService(httpClient)
 
     /**
      * Properly dispose of the service and cancel all running coroutines
@@ -46,14 +43,9 @@ class CompletionsChatAsyncService(
     ) {
         if (message.isNullOrBlank()) return
 
-        // Retrieve API key from multiple possible sources
         val apiKey = getApiKey()
         if (apiKey.isNullOrEmpty()) {
-            val errorMessage =
-                "OpenAI API key not found. Please set it using one of these methods:\n" +
-                    "Environment variable: export OPENAI_API_KEY=your_key_here\n" +
-                    "For more details, see the plugin documentation."
-            callback.onError(errorMessage)
+            callback.onError("API key not configured. Please set your Cursor API key in Settings.")
             return
         }
 
@@ -62,21 +54,15 @@ class CompletionsChatAsyncService(
             try {
                 val request =
                     ChatRequest(
-                        model = "gpt-3.5-turbo",
+                        model = "gpt-4",
+                        prompt = message,
+                        context = context,
                         maxTokens = 1000,
                         temperature = 0.7,
-                        messages =
-                            listOf(
-                                ChatMessage(
-                                    role = "user",
-                                    content = message,
-                                ),
-                            ),
                     )
 
                 val chatResponse =
-                    openAIApiService.sendMessage(
-                        apiKey = apiKey,
+                    cursorApiService.sendMessage(
                         request = request,
                     )
 
@@ -87,10 +73,12 @@ class CompletionsChatAsyncService(
                             .message.content
                     callback.onSuccess(content)
                 } else {
-                    callback.onError("No response content received from OpenAI API")
+                    callback.onError("No response content received from Cursor API")
                 }
             } catch (e: Exception) {
-                callback.onError("Error communicating with OpenAI API: ${e.message}")
+                callback.onError("Network error: ${e.message}")
+            } finally {
+                dispose()
             }
         }
     }

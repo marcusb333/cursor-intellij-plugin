@@ -1,5 +1,6 @@
 package com.cursor.plugin
 
+import com.cursor.plugin.actions.OpenCursorAIAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.project.Project
@@ -7,31 +8,30 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 
-import org.mockito.Mockito.*
-
 /**
- * Test class for [OpenCursorAIAction].
- * 
+ * Test class for [com.cursor.plugin.actions.OpenCursorAIAction].
+ *
  * This class contains unit tests for the OpenCursorAIAction, covering:
  * <ul>
  *   <li>Action execution with valid and null projects</li>
  *   <li>Action update behavior based on project availability</li>
  *   <li>Presentation state management (enabled/disabled)</li>
  * </ul>
- * 
+ *
  * Tests verify that the action handles edge cases gracefully and properly
  * manages its enabled state based on project context.
- * 
+ *
  * @author Cursor Plugin Team
  * @since 1.0.0
  */
 @ExtendWith(MockitoExtension::class)
 class OpenCursorAIActionTest {
-
     @Mock
     private lateinit var mockProject: Project
+
     @Mock
     private lateinit var mockPresentation: Presentation
 

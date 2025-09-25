@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -41,9 +41,9 @@ import com.intellij.openapi.wm.ToolWindowManager
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see CursorToolWindowFactory
- * @see CursorChatPanel
- * @see com.intellij.openapi.actionSystem.AnAction
+ * @see com.cursor.plugin.view.CursorToolWindowFactory
+ * @see com.cursor.plugin.view.CursorChatPanel
+ * @see AnAction
  */
 class OpenCursorAIAction : AnAction() {
     @Throws(IllegalStateException::class)

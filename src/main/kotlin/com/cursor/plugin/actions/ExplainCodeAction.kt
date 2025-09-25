@@ -1,5 +1,7 @@
-package com.cursor.plugin
+package com.cursor.plugin.actions
 
+import com.cursor.plugin.CompletionsChatAsyncService
+import com.cursor.plugin.service.CursorAIResponseCallback
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -39,8 +41,8 @@ import javax.swing.SwingUtilities
  * @author Cursor AI Plugin Team
  * @version 0.0.4
  * @since 1.0
- * @see CompletionsChatAsyncService
- * @see com.intellij.openapi.actionSystem.AnAction
+ * @see com.cursor.plugin.CompletionsChatAsyncService
+ * @see AnAction
  */
 class ExplainCodeAction : AnAction() {
     override fun actionPerformed(
@@ -65,7 +67,7 @@ class ExplainCodeAction : AnAction() {
             return
         }
 
-        val aiService = CompletionsChatAsyncService.getInstance(project)
+        val aiService = CompletionsChatAsyncService.Companion.getInstance(project)
         val prompt = "Please explain this code:\n\n$selectedText"
         val context = "Code explanation request"
 

@@ -1,11 +1,13 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
+    kotlin("jvm") version "2.1.0"
     id("org.jetbrains.intellij.platform") version "2.0.0"
     application
 }
 
 group = "com.cursor"
 version = "0.0.4"
+
+defaultTasks("build")
 
 repositories {
     mavenCentral()
@@ -24,6 +26,14 @@ dependencies {
 
     // JSON processing
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Ktor HTTP client
+    implementation("io.ktor:ktor-client-core:2.3.7")
+    implementation("io.ktor:ktor-client-cio:2.3.7")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
+    implementation("io.ktor:ktor-serialization-gson:2.3.7")
+    implementation("io.ktor:ktor-client-logging:2.3.7")
+    
     // implementation("com.azure:azure-identity:1.17.0")
 
     // Testing dependencies
