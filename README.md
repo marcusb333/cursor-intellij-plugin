@@ -13,11 +13,7 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 ## Installation
 
-### Prerequisites
 
-- IntelliJ IDEA (any version - no version restrictions)
-- Java 21 or later
-- OpenAI API key (get one from [OpenAI](https://platform.openai.com/api-keys))
 
 ### Building from Source
 
