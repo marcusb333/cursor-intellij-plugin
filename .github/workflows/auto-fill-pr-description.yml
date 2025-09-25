@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to update'
+        description: "PR number to update"
         required: true
         type: number
 
@@ -37,52 +37,50 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           pr_number=${{ steps.pr.outputs.number }}
           repo=${{ github.repository }}
-          
+
           # Get PR details
           pr_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
             "https://api.github.com/repos/${repo}/pulls/${pr_number}")
-          
+
           title=$(echo "$pr_data" | jq -r '.title')
           current_body=$(echo "$pr_data" | jq -r '.body // ""')
-          base_sha=$(echo "$pr_data" | jq -r '.base.sha')
-          head_sha=$(echo "$pr_data" | jq -r '.head.sha')
-          
+
           # Get file changes
           files_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
             "https://api.github.com/repos/${repo}/pulls/${pr_number}/files")
-          
+
           # Extract changed files summary
           files_summary=$(echo "$files_data" | jq -r '
             map(select(.status != "removed")) | 
             map("\(.filename): +\(.additions)/-\(.deletions)") | 
             join(", ")
           ')
-          
+
           # Get commit messages
           commits_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
             "https://api.github.com/repos/${repo}/pulls/${pr_number}/commits")
-          
+
           commit_messages=$(echo "$commits_data" | jq -r '
             map(.commit.message | split("\n")[0]) | 
             unique | 
             join("; ")
           ')
-          
+
           # Get diff content (limited to prevent API overload)
-          MAX_DIFF_CONTENT_LENGTH=8000
           diff_content=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github.diff" \
-            "https://api.github.com/repos/${repo}/pulls/${pr_number}" | head -c $MAX_DIFF_CONTENT_LENGTH)
-          
+            "https://api.github.com/repos/${repo}/pulls/${pr_number}" | head -c 8000)
+
           # Save data to files for next step
           echo "$title" > pr_title.txt
           echo "$current_body" > pr_body.txt
           echo "$files_summary" > files_summary.txt
           echo "$commit_messages" > commit_messages.txt
           echo "$diff_content" > diff_content.txt
-          
+
           echo "title=$title" >> $GITHUB_OUTPUT
           echo "current_body<<EOF" >> $GITHUB_OUTPUT
           echo "$current_body" >> $GITHUB_OUTPUT
@@ -93,46 +91,47 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
+          set -e
           if [ -z "$OPENAI_API_KEY" ]; then
             echo "Error: OPENAI_API_KEY secret not set"
             exit 1
           fi
-          
+
           title=$(cat pr_title.txt)
           files_summary=$(cat files_summary.txt)
           commit_messages=$(cat commit_messages.txt)
           diff_content=$(cat diff_content.txt)
-          
-          # Create the prompt for Cursor/OpenAI
+
+          # Create the prompt for OpenAI
           prompt="You are helping to auto-fill a GitHub Pull Request template for an IntelliJ plugin project called 'Cursor AI Assistant'.
 
-PR Title: $title
+          PR Title: $title
 
-Files Changed: $files_summary
+          Files Changed: $files_summary
 
-Commit Messages: $commit_messages
+          Commit Messages: $commit_messages
 
-Diff Preview: $diff_content
+          Diff Preview: $diff_content
 
-Please provide responses for these template fields in JSON format:
-{
-  \"brief_description_and_context\": \"1-2 sentence overview of what this PR does and why\",
-  \"summary\": \"Detailed explanation of the changes and their purpose\",
-  \"change_types\": \"Comma-separated list: Feature, Bug fix, Refactor/Cleanup, Documentation, Build/Tooling, Test improvement\",
-  \"change_brief_descriptions\": \"Brief description of each change type selected\",
-  \"key_changes\": \"Bullet points of the most important technical changes\",
-  \"compatibility_and_risk\": \"Assessment of compatibility impact and risk level (Low/Medium/High)\",
-  \"security_review\": \"Any security considerations or confirmations needed\"
-}
+          Please provide a JSON response with the following structure:
+          {
+            \"brief_description_and_context\": \"1-2 sentence overview of what this PR does and why\",
+            \"summary\": \"Detailed explanation of the changes and their purpose\",
+            \"changes\": \"chore, docs, feat, fix, refactor, style, or test followed by the change\",
+            \"change_brief_descriptions\": \"Brief description of each change type selected\",
+            \"key_changes\": \"Bullet points of the most important technical changes\",
+            \"compatibility_and_risk\": \"Assessment of compatibility impact and risk level (Low/Medium/High)\",
+            \"security_review\": \"Any security considerations or confirmations needed\"
+          }
 
-Focus on:
-- IntelliJ plugin development context
-- Kotlin/Java code changes
-- API integrations (especially OpenAI/Cursor AI)
-- Build system changes (Gradle)
-- Testing improvements
+          Focus on:
+          - IntelliJ plugin development context
+          - Kotlin/Java code changes
+          - API integrations (especially OpenAI/Cursor AI)
+          - Build system changes (Gradle)
+          - Testing improvements
 
-Keep responses concise and technical."
+          Keep responses concise and technical."
 
           # Make API call to OpenAI
           response=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
@@ -147,16 +146,16 @@ Keep responses concise and technical."
               \"max_tokens\": 1000,
               \"temperature\": 0.3
             }")
-          
+
           # Extract content from response
           ai_content=$(echo "$response" | jq -r '.choices[0].message.content')
-          
+
           if [ "$ai_content" = "null" ] || [ -z "$ai_content" ]; then
             echo "Error: Failed to get AI response"
             echo "Response: $response"
             exit 1
           fi
-          
+
           echo "$ai_content" > ai_response.json
           echo "ai_content<<EOF" >> $GITHUB_OUTPUT
           echo "$ai_content" >> $GITHUB_OUTPUT
@@ -166,11 +165,12 @@ Keep responses concise and technical."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           pr_number=${{ steps.pr.outputs.number }}
           repo=${{ github.repository }}
-          current_body='${{ steps.pr_data.outputs.current_body }}'
-          ai_content='${{ steps.ai_description.outputs.ai_content }}'
-          
+          current_body="${{ steps.pr_data.outputs.current_body }}"
+          ai_content="${{ steps.ai_description.outputs.ai_content }}"
+
           # Check if current body has any template placeholders
           if [[ "$current_body" != *"{brief_description_and_context}"* && \
                 "$current_body" != *"{summary}"* && \
@@ -182,38 +182,38 @@ Keep responses concise and technical."
             echo "PR description doesn't contain any template placeholders, skipping update"
             exit 0
           fi
-          
+
           # Parse AI response JSON
-          brief_description=$(echo "$ai_content" | jq -r '.brief_description_and_context')
-          summary=$(echo "$ai_content" | jq -r '.summary')
-          change_types=$(echo "$ai_content" | jq -r '.change_types')
-          change_brief_descriptions=$(echo "$ai_content" | jq -r '.change_brief_descriptions')
-          key_changes=$(echo "$ai_content" | jq -r '.key_changes')
-          compatibility_and_risk=$(echo "$ai_content" | jq -r '.compatibility_and_risk')
-          security_review=$(echo "$ai_content" | jq -r '.security_review')
-          
-          # Replace placeholders in the current body
-          updated_body="$current_body"
-          updated_body="${updated_body//\{brief_description_and_context\}/$brief_description}"
-          updated_body="${updated_body//\{summary\}/$summary}"
-          updated_body="${updated_body//\{change_types\}/$change_types}"
-          updated_body="${updated_body//\{change_brief_descriptions\}/$change_brief_descriptions}"
-          updated_body="${updated_body//\{key_changes\}/$key_changes}"
-          updated_body="${updated_body//\{compatibility_and_risk\}/$compatibility_and_risk}"
-          updated_body="${updated_body//\{security_review\}/$security_review}"
-          
+          brief_description=$(echo "$ai_content" | jq -r '.brief_description_and_context // "N/A"')
+          summary=$(echo "$ai_content" | jq -r '.summary // "N/A"')
+          change_types=$(echo "$ai_content" | jq -r '.changes // "N/A"')
+          change_brief_descriptions=$(echo "$ai_content" | jq -r '.change_brief_descriptions // "N/A"')
+          key_changes=$(echo "$ai_content" | jq -r '.key_changes // "N/A"')
+          compatibility_and_risk=$(echo "$ai_content" | jq -r '.compatibility_and_risk // "N/A"')
+          security_review=$(echo "$ai_content" | jq -r '.security_review // "N/A"')
+
+          # Replace placeholders in the current body using sed
+          updated_body=$(echo "$current_body" | \
+            sed "s|{brief_description_and_context}|$brief_description|g" | \
+            sed "s|{summary}|$summary|g" | \
+            sed "s|{change_types}|$change_types|g" | \
+            sed "s|{change_brief_descriptions}|$change_brief_descriptions|g" | \
+            sed "s|{key_changes}|$key_changes|g" | \
+            sed "s|{compatibility_and_risk}|$compatibility_and_risk|g" | \
+            sed "s|{security_review}|$security_review|g")
+
           # Update PR via GitHub API
           json_payload=$(jq -n --arg body "$updated_body" '{body: $body}')
-          
+
           curl -s -X PATCH \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -d "$json_payload" \
             "https://api.github.com/repos/${repo}/pulls/${pr_number}"
-          
+
           echo "✅ PR description updated with AI-generated content"
           echo ""
           echo "Generated content:"
           echo "Brief Description: $brief_description"
-          echo "Change Types: $change_types"
+          echo "Changes: $change_types"
           echo "Risk Assessment: $compatibility_and_risk"
