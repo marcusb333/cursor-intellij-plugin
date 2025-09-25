@@ -170,9 +170,15 @@ Keep responses concise and technical."
           current_body='${{ steps.pr_data.outputs.current_body }}'
           ai_content='${{ steps.ai_description.outputs.ai_content }}'
           
-          # Check if current body has template placeholders
-          if [[ "$current_body" != *"{brief_description_and_context}"* ]]; then
-            echo "PR description doesn't contain template placeholders, skipping update"
+          # Check if current body has any template placeholders
+          if [[ "$current_body" != *"{brief_description_and_context}"* && \
+                "$current_body" != *"{summary}"* && \
+                "$current_body" != *"{change_types}"* && \
+                "$current_body" != *"{change_brief_descriptions}"* && \
+                "$current_body" != *"{key_changes}"* && \
+                "$current_body" != *"{compatibility_and_risk}"* && \
+                "$current_body" != *"{security_review}"* ]]; then
+            echo "PR description doesn't contain any template placeholders, skipping update"
             exit 0
           fi
           
