@@ -22,26 +22,32 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 ### Building from Source
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/your-username/cursor-intellij-plugin.git
    cd cursor-intellij-plugin
    ```
 
 2. Set your OpenAI API key as an environment variable:
+
    ```bash
    export OPENAI_API_KEY=your_api_key_here
    ```
+
    Or set it as a system property:
+
    ```bash
    -Dopenai.api.key=your_api_key_here
    ```
 
 3. Build the plugin using the build script (recommended):
+
    ```bash
    ./build.sh all
    ```
-   
+
    Or use Gradle directly:
+
    ```bash
    ./gradlew buildPlugin
    ```
@@ -102,6 +108,7 @@ The build script provides colored output, error checking, and will verify that y
 ### Chat Interface
 
 The Cursor AI panel provides a chat interface where you can:
+
 - Ask questions about your code
 - Request code generation
 - Get explanations for complex logic
@@ -114,11 +121,13 @@ The Cursor AI panel provides a chat interface where you can:
 The plugin requires an OpenAI API key to function. You can set it in one of these ways:
 
 1. **Environment Variable**:
+
    ```bash
    export OPENAI_API_KEY=your_api_key_here
    ```
 
 2. **System Property**:
+
    ```bash
    -Dopenai.api.key=your_api_key_here
    ```
@@ -134,6 +143,7 @@ The plugin requires an OpenAI API key to function. You can set it in one of thes
 This project uses centralized version management. The version is defined in `src/main/resources/META-INF/plugin.xml` and automatically synchronized across all files using the `sync-version.sh` script.
 
 To update the version:
+
 1. Edit the version in `plugin.xml`
 2. Run `./sync-version.sh`
 3. Build and test with `./gradlew clean build`
@@ -142,7 +152,7 @@ See [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md) for detailed information.
 
 ### Project Structure
 
-```
+```text
 src/main/kotlin/com/cursor/plugin/
 ├── CursorPlugin.kt                    # Main plugin class
 ├── CompletionsChatAsyncService.kt     # AI service with coroutine support
@@ -163,21 +173,25 @@ src/main/kotlin/com/cursor/plugin/
 ### Building and Testing
 
 1. **Build the plugin**:
+
    ```bash
    ./gradlew build
    ```
 
 2. **Run tests**:
+
    ```bash
    ./gradlew test
    ```
 
 3. **Build distributable plugin**:
+
    ```bash
    ./gradlew buildPlugin
    ```
 
 4. **Run in development IDE**:
+
    ```bash
    ./gradlew runIde
    ```
@@ -194,12 +208,14 @@ src/main/kotlin/com/cursor/plugin/
 ### Testing
 
 The project includes comprehensive unit tests covering:
+
 - AI service functionality
 - Action implementations
 - Error handling scenarios
 - Mock server integration
 
 Run the test suite with:
+
 ```bash
 ./gradlew test
 ```
@@ -209,6 +225,7 @@ For more detailed testing information, see [TESTING.md](TESTING.md).
 ## API Integration
 
 The plugin communicates with OpenAI's API using the following endpoint:
+
 - **Base URL**: `https://api.openai.com/v1/chat/completions`
 - **Authentication**: Bearer token (API key)
 - **Request Format**: JSON with model, messages, and parameters
@@ -270,6 +287,7 @@ The plugin communicates with OpenAI's API using the following endpoint:
 ### Debug Mode
 
 To enable debug logging, add this system property when starting IntelliJ:
+
 ```bash
 -Dcom.cursor.plugin.debug=true
 ```
@@ -287,6 +305,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Changelog
 
 ### Version 0.0.5 (Current)
+
 - 🚀 **Universal Compatibility**: Compatible with all IntelliJ IDEA versions (removed version restrictions)
 - 🔧 **Build System Improvements**: Fixed dependency conflicts and enhanced build pipeline
 - ⚡ **HTTP Client Migration**: Migrated to Java HttpClient for reliable HTTP communication
@@ -301,6 +320,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🔄 **Template Intelligence**: Workflow analyzes code changes, commit messages, and diffs to generate contextual PR descriptions
 
 ### Version 0.0.4
+
 - ✅ **Build System Fixed**: Resolved Kotlin compilation errors and dependency conflicts
 - 🔧 **HTTP Client Migration**: Initial migration from OpenAI client library
 - ⚡ **Enhanced Compatibility**: GenerateCodeAction and ExplainCodeAction working

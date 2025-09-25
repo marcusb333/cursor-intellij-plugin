@@ -1,35 +1,27 @@
-# Pull Request Description
+# Pull Request
 
-## 📋 Summary
-<!-- Brief description of what this PR accomplishes -->
+{brief_description_and_context}
 
-## 🎯 Changes Made
-<!-- List of key changes in this PR -->
-- [ ] Change 1
-- [ ] Change 2
-- [ ] Change 3
+## Summary
 
-## 🧪 Testing
-<!-- How was this tested? -->
-- [ ] Unit tests pass
-- [ ] Integration tests pass
+{summary}
+
+## Type of Change
+
+{change_types}, {change_brief_descriptions}
+
+## Key Changes
+
+{key_changes}
+
+## Testing
+
 - [ ] Manual testing completed
-- [ ] Build verification
 
-## 📸 Screenshots/Demo
-<!-- Add screenshots or demo links if applicable -->
+## Compatibility & Risk
 
-## 🔗 Related Issues
-<!-- Link to related issues, tickets, or discussions -->
-- Closes #
-- Related to #
+{compatibility_and_risk}
 
-## 📝 Additional Notes
-<!-- Any additional context, considerations, or notes -->
+## Security Review
 
-## ✅ Checklist
-- [ ] Code follows project style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated (if needed)
-- [ ] Breaking changes documented
-- [ ] Ready for review
+{security_review}
