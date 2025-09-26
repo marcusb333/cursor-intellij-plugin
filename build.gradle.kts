@@ -1,7 +1,5 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
-    id("org.jetbrains.intellij.platform") version "2.0.0"
-    application
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
 }
 
 group = "com.cursor"
@@ -17,22 +15,39 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        // Build with 2024.3.6 but plugin is compatible with all versions
-        intellijIdeaCommunity("2024.3.6")
-        instrumentationTools()
+        // Support both IC (Community) and IU (Ultimate) builds
+        val platformType = providers.gradleProperty("platformType").getOrElse("IU")
+        val platformVersion = providers.gradleProperty("platformVersion").getOrElse("2025.2")
+
+        when (platformType) {
+            "IC" -> {
+                // For versions before 2025.3, use intellijIdeaCommunity
+                if (platformVersion < "2025.3") {
+                    intellijIdeaCommunity(platformVersion)
+                } else {
+                    // Starting with 2025.3, IC is not available as a target
+                    error("IntelliJ IDEA Community (IC) is not available for version $platformVersion and later. Use IU instead.")
+                }
+            }
+            "IU" -> {
+                // For newer versions, use the updated method if available
+                intellijIdeaUltimate(platformVersion)
+            }
+            else -> error("Unknown platform type: $platformType. Use IC for Community or IU for Ultimate.")
+        }
     }
 
     // JSON processing
     implementation("com.google.code.gson:gson:2.10.1")
     // implementation("com.azure:azure-identity:1.17.0")
 
-    // Testing dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
-    testImplementation("org.junit.platform:junit-platform-suite-api:1.10.1")
-    testImplementation("org.mockito:mockito-core:5.8.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+    // Testing dependencies - updated for compatibility with IntelliJ 2025.2
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.0")
+    testImplementation("org.junit.platform:junit-platform-suite-api:1.11.0")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
     testImplementation("org.assertj:assertj-core:3.25.1")
 }
@@ -64,20 +79,6 @@ tasks {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
             freeCompilerArgs.addAll("-Xjvm-default=all")
-        }
-    }
-
-    compileKotlin {
-        kotlinOptions {
-            jvmTarget = "21"
-            freeCompilerArgs = listOf("-Xjvm-default=all")
-        }
-    }
-
-    compileTestKotlin {
-        kotlinOptions {
-            jvmTarget = "21"
-            freeCompilerArgs = listOf("-Xjvm-default=all")
         }
     }
 

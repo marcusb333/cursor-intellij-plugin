@@ -20,6 +20,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [IC, IU]
     permissions:
       contents: read
       packages: write
@@ -39,22 +42,31 @@ jobs:
     - name: Make build script executable
       run: chmod +x ./build.sh
     
+    - name: Set platform type
+      run: echo "Building for platform: ${{ matrix.platform }}"
+    
     - name: Check prerequisites
       run: ./build.sh check
     
     - name: Run tests
       run: ./build.sh test
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
     
     - name: Build plugin
       run: ./build.sh build
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
     
     - name: Create distribution
       run: ./build.sh dist
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: cursor-intellij-plugin-${{ github.sha }}
+        name: cursor-intellij-plugin-${{ matrix.platform }}-${{ github.sha }}
         path: |
           build/libs/*.jar
           build/distributions/*.zip
