@@ -51,7 +51,7 @@ class CursorSettingsComponent {
 
     fun isModified(): Boolean {
         val settings = CursorSettingsState.instance
-        return settings.getApiKey() != String(apiKeyField.password) ||
+        return (settings.getApiKey() ?: "") != String(apiKeyField.password) ||
             settings.apiEndpoint != apiEndpointField.text ||
             settings.timeoutSeconds != timeoutField.text.toIntOrNull()
     }
