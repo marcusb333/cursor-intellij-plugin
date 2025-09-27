@@ -1,5 +1,6 @@
 package com.cursor.plugin
 
+import com.cursor.plugin.settings.CursorSettingsState
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -24,12 +25,14 @@ class CompletionsChatAsyncService(
     private val serviceJob = SupervisorJob()
     internal val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
-    private val httpClient: HttpClient by lazy {
-        HttpClient
-            .newBuilder()
-            .connectTimeout(Duration.ofSeconds(30))
-            .build()
-    }
+    private val httpClient: HttpClient
+        get() {
+            val timeout = CursorSettingsState.instance.timeoutSeconds.toLong()
+            return HttpClient
+                .newBuilder()
+                .connectTimeout(Duration.ofSeconds(timeout))
+                .build()
+        }
 
     private val gson: Gson by lazy {
         Gson()
@@ -47,7 +50,13 @@ class CompletionsChatAsyncService(
     }
 
     override fun getApiKey(): String? {
-        // 1. Environment variable OPENAI_API_KEY
+        // 1. Check settings first
+        val settingsApiKey = CursorSettingsState.instance.getApiKey()
+        if (!settingsApiKey.isNullOrEmpty()) {
+            return settingsApiKey.trim()
+        }
+        
+        // 2. Fall back to environment variable OPENAI_API_KEY
         var apiKey: String? = null
         try {
             apiKey = System.getenv("OPENAI_API_KEY")
@@ -72,8 +81,9 @@ class CompletionsChatAsyncService(
         val apiKey = getApiKey()
         if (apiKey.isNullOrEmpty()) {
             val errorMessage =
-                "OpenAI API key not found. Please set it using one of these methods:\n" +
-                    "Environment variable: export OPENAI_API_KEY=your_key_here\n" +
+                "OpenAI API key not found. Please configure it in:\n" +
+                    "1. Plugin Settings: File → Settings → Cursor AI\n" +
+                    "2. Or set environment variable: export OPENAI_API_KEY=your_key_here\n" +
                     "For more details, see the plugin documentation."
             callback.onError(errorMessage)
             return
@@ -100,14 +110,18 @@ class CompletionsChatAsyncService(
                     }
 
                 // Create HTTP request
+                val settings = CursorSettingsState.instance
+                val apiEndpoint = settings.apiEndpoint
+                val timeout = settings.timeoutSeconds.toLong()
+                
                 val request =
                     HttpRequest
                         .newBuilder()
-                        .uri(URI.create("https://api.openai.com/v1/chat/completions"))
+                        .uri(URI.create("$apiEndpoint/chat/completions"))
                         .header("Content-Type", "application/json")
                         .header("Authorization", "Bearer $apiKey")
                         .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestBody)))
-                        .timeout(Duration.ofSeconds(60))
+                        .timeout(Duration.ofSeconds(timeout))
                         .build()
 
                 // Make the API call
