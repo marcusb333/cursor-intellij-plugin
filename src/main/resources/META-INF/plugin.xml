@@ -1,10 +1,8 @@
-~
-
 <idea-plugin>
     <id>com.cursor.plugin</id>
     <name>Cursor AI Assistant</name>
     <vendor email="support@cursor.com" url="https://cursor.com">Cursor</vendor>
-    <version>0.0.5</version>
+    <version>0.5.0</version>
 
     <!-- Compatibility with IntelliJ IDEA Ultimate 2025.2+ -->
     <idea-version since-build="252" until-build="999.*"/>

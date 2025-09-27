@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.cursor"
-version = "0.0.4"
+version = "0.5.0"
 
 repositories {
     mavenCentral()

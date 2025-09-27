@@ -19,9 +19,9 @@ import org.jetbrains.annotations.NotNull
  *   <li>Code generation and completion</li>
  *   <li>AI-powered assistance through a dedicated tool window</li>
  * </ul>
- *
+*~
  * @author Cursor AI Plugin Team
- * @version 0.0.4
+ * @version 0.5.0
  * @since 1.0
  * @see CompletionsChatAsyncService
  * @see StartupActivity
