@@ -98,3 +98,45 @@ tasks {
         }
     }
 }
+
+// Publishing configuration for JetBrains Marketplace
+publishing {
+    publications {
+        create<MavenPublication>("plugin") {
+            from(components["java"])
+            
+            groupId = project.group.toString()
+            artifactId = "cursor-intellij-plugin"
+            version = project.version.toString()
+            
+            pom {
+                name.set("Cursor AI IntelliJ Plugin")
+                description.set("Integrate Cursor's powerful AI chatbot directly into IntelliJ IDEA")
+                url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "your-username/cursor-intellij-plugin"}")
+                
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+                
+                developers {
+                    developer {
+                        id.set("cursor")
+                        name.set("Cursor Team")
+                        email.set("support@cursor.com")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// JetBrains Marketplace publishing configuration
+intellijPlatform {
+    publishing {
+        token.set(System.getenv("JETBRAINS_MARKETPLACE_TOKEN") ?: "")
+        channels.set(listOf("default"))
+    }
+}

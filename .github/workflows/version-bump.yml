@@ -1,0 +1,223 @@
+name: Automated Version Bump
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Type of version bump'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      create_pr:
+        description: 'Create a pull request for the version bump'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  # Job 1: Check if version bump is needed
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_bump: ${{ steps.check.outputs.needs_bump }}
+      current_version: ${{ steps.check.outputs.current_version }}
+      new_version: ${{ steps.check.outputs.new_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version bump is needed
+        id: check
+        run: |
+          # Extract current version from plugin.xml
+          CURRENT_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if this is a manual trigger
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+            NEEDS_BUMP="true"
+            
+            # Calculate new version
+            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=${VERSION_PARTS[1]}
+            PATCH=${VERSION_PARTS[2]}
+            
+            case $BUMP_TYPE in
+              major)
+                NEW_VERSION="$((MAJOR + 1)).0.0"
+                ;;
+              minor)
+                NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+                ;;
+              patch)
+                NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+                ;;
+            esac
+            
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "needs_bump=$NEEDS_BUMP" >> $GITHUB_OUTPUT
+            
+            echo "Manual version bump requested:"
+            echo "Current version: $CURRENT_VERSION"
+            echo "New version: $NEW_VERSION"
+            echo "Bump type: $BUMP_TYPE"
+          else
+            # Check if there are changes that warrant a version bump
+            # This is a simple heuristic - you might want to customize this
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            
+            # Check if any source files changed
+            if echo "$CHANGED_FILES" | grep -q "src/"; then
+              NEEDS_BUMP="true"
+              # For automatic bumps, always use patch
+              IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+              MAJOR=${VERSION_PARTS[0]}
+              MINOR=${VERSION_PARTS[1]}
+              PATCH=${VERSION_PARTS[2]}
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+              
+              echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              echo "needs_bump=$NEEDS_BUMP" >> $GITHUB_OUTPUT
+              
+              echo "Automatic version bump needed:"
+              echo "Current version: $CURRENT_VERSION"
+              echo "New version: $NEW_VERSION"
+              echo "Changed files: $CHANGED_FILES"
+            else
+              echo "needs_bump=false" >> $GITHUB_OUTPUT
+              echo "No version bump needed - no source files changed"
+            fi
+          fi
+
+  # Job 2: Create version bump
+  bump-version:
+    needs: check-version
+    runs-on: ubuntu-latest
+    if: needs.check-version.outputs.needs_bump == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Update version in plugin.xml
+        run: |
+          CURRENT_VERSION="${{ needs.check-version.outputs.current_version }}"
+          NEW_VERSION="${{ needs.check-version.outputs.new_version }}"
+          
+          # Update plugin.xml
+          sed -i "s/<version>$CURRENT_VERSION<\/version>/<version>$NEW_VERSION<\/version>/" src/main/resources/META-INF/plugin.xml
+          
+          echo "Updated version from $CURRENT_VERSION to $NEW_VERSION in plugin.xml"
+
+      - name: Run version synchronization script
+        run: |
+          chmod +x ./sync-version.sh
+          ./sync-version.sh
+
+      - name: Verify version consistency
+        run: |
+          # Verify all files have the same version
+          PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
+          BUILD_VERSION=$(grep -o "version[[:space:]]*['\"][^'\"]*['\"]" build.gradle.kts | sed "s/version[[:space:]]*['\"]//" | sed "s/['\"]//")
+          
+          echo "Plugin XML version: $PLUGIN_VERSION"
+          echo "Build.gradle.kts version: $BUILD_VERSION"
+          
+          if [ "$PLUGIN_VERSION" != "$BUILD_VERSION" ]; then
+            echo "❌ Version synchronization failed!"
+            exit 1
+          fi
+          
+          echo "✅ Version consistency verified"
+
+      - name: Create commit
+        run: |
+          NEW_VERSION="${{ needs.check-version.outputs.new_version }}"
+          git add .
+          git commit -m "Bump version to $NEW_VERSION
+
+          - Updated plugin.xml version
+          - Synchronized version across all files
+          - Automated version bump via GitHub Actions"
+
+      - name: Create Pull Request
+        if: github.event.inputs.create_pr == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Bump version to ${{ needs.check-version.outputs.new_version }}"
+          title: "Version Bump: ${{ needs.check-version.outputs.current_version }} → ${{ needs.check-version.outputs.new_version }}"
+          body: |
+            ## Version Bump: ${{ needs.check-version.outputs.current_version }} → ${{ needs.check-version.outputs.new_version }}
+            
+            This PR automatically bumps the version across all project files.
+            
+            ### Changes Made:
+            - ✅ Updated `src/main/resources/META-INF/plugin.xml`
+            - ✅ Updated `build.gradle.kts`
+            - ✅ Updated `build.sh`
+            - ✅ Updated `PROJECT_SUMMARY.md`
+            - ✅ Updated `README.md`
+            
+            ### Next Steps:
+            1. Review and merge this PR
+            2. Create a release tag: `git tag v${{ needs.check-version.outputs.new_version }}`
+            3. Push the tag: `git push origin v${{ needs.check-version.outputs.new_version }}`
+            4. The comprehensive release workflow will automatically build and publish the release
+            
+            ### Verification:
+            - [ ] All version references are consistent
+            - [ ] Build script works correctly
+            - [ ] Plugin loads without errors
+          branch: version-bump-${{ needs.check-version.outputs.new_version }}
+          delete-branch: true
+
+      - name: Push directly to main (if no PR requested)
+        if: github.event.inputs.create_pr != 'true'
+        run: |
+          git push origin HEAD:main
+
+  # Job 3: Notify completion
+  notify:
+    needs: [check-version, bump-version]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify version bump completion
+        run: |
+          if [ "${{ needs.bump-version.result }}" = "success" ]; then
+            echo "✅ Version bump completed successfully!"
+            echo "New version: ${{ needs.check-version.outputs.new_version }}"
+            if [ "${{ github.event.inputs.create_pr }}" = "true" ]; then
+              echo "📝 Pull request created for review"
+            else
+              echo "🚀 Version pushed directly to main branch"
+            fi
+          elif [ "${{ needs.check-version.outputs.needs_bump }}" = "false" ]; then
+            echo "ℹ️ No version bump needed"
+          else
+            echo "❌ Version bump failed!"
+            exit 1
+          fi
