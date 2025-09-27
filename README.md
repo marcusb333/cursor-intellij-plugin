@@ -52,6 +52,16 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    ./gradlew buildPlugin
    ```
 
+   To build for a specific IntelliJ platform:
+   
+   ```bash
+   # Build for IntelliJ IDEA Community Edition
+   ./gradlew buildPlugin -PplatformType=IC
+   
+   # Build for IntelliJ IDEA Ultimate Edition (default)
+   ./gradlew buildPlugin -PplatformType=IU
+   ```
+
 4. Install the plugin:
    - Go to File → Settings → Plugins
    - Click the gear icon → Install Plugin from Disk
