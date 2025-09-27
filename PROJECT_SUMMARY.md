@@ -237,8 +237,8 @@ The plugin supports multiple methods for API key configuration:
 ## Deployment
 
 ### Build Artifacts
-- Plugin JAR: `build/libs/cursor-intellij-plugin-0.0.4.jar`
-- Distribution ZIP: `build/distributions/cursor-intellij-plugin-0.0.4.zip`
+- Plugin JAR: `build/libs/cursor-intellij-plugin-0.5.0.jar`
+- Distribution ZIP: `build/distributions/cursor-intellij-plugin-0.5.0.zip`
 
 ### Installation Methods
 1. Manual installation from built ZIP file

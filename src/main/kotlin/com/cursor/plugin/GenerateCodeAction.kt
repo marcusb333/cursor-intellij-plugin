@@ -46,7 +46,7 @@ import javax.swing.SwingUtilities
  * </ul>
  *
  * @author Cursor AI Plugin Team
- * @version 0.0.4
+ * @version 0.5.0
  * @since 1.0
  * @see CompletionsChatAsyncService
  * @see com.intellij.openapi.actionSystem.AnAction

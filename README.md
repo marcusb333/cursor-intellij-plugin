@@ -314,7 +314,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Version 0.0.5 (Current)
+### Version 0.5.0 (Current)
+
+- ⚙️ **Settings Management**: Implemented comprehensive settings panel for API configuration
+- 🔧 **Platform Upgrade**: Upgraded to latest IntelliJ Platform plugin for enhanced compatibility
+- 🧪 **Enhanced Testing**: Improved test suite with better API connection testing and coverage
+- 🚀 **Build System**: Updated build configuration for better platform compatibility
+- 🔄 **Workflow Management**: Disabled auto-fill PR workflow for manual PR creation
+- 🧹 **Code Refactoring**: Cleaned up and enhanced API connection handling
+
+### Version 0.0.5
 
 - 🚀 **Universal Compatibility**: Compatible with all IntelliJ IDEA versions (removed version restrictions)
 - 🔧 **Build System Improvements**: Fixed dependency conflicts and enhanced build pipeline
