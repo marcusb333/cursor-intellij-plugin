@@ -1,5 +1,7 @@
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.intellij.platform") version "2.9.0"
+    application
 }
 
 group = "com.cursor"
@@ -30,11 +32,14 @@ dependencies {
                 }
             }
             "IU" -> {
-                // For newer versions, use the updated method if available
+                // For newer versions, still use intellijIdeaUltimate
                 intellijIdeaUltimate(platformVersion)
             }
             else -> error("Unknown platform type: $platformType. Use IC for Community or IU for Ultimate.")
         }
+        
+        // Bundled plugins required for testing
+        bundledPlugin("com.intellij.java")
     }
 
     // JSON processing
@@ -50,6 +55,10 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
     testImplementation("org.mockito:mockito-inline:5.2.0")
     testImplementation("org.assertj:assertj-core:3.25.1")
+    
+    // JUnit 4 compatibility for TestRule
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.11.0")
 }
 
 java {
