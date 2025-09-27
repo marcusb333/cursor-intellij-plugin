@@ -1,3 +1,5 @@
+~
+
 <idea-plugin>
     <id>com.cursor.plugin</id>
     <name>Cursor AI Assistant</name>
@@ -65,6 +67,16 @@
                    icon="/icons/cursor-icon.png" 
                    anchor="right" 
                    factoryClass="com.cursor.plugin.CursorToolWindowFactory"/>
+                   
+        <!-- Settings State Service -->
+        <applicationService serviceImplementation="com.cursor.plugin.settings.CursorSettingsState"/>
+        
+        <!-- Settings Configurable -->
+        <applicationConfigurable 
+                id="cursor.settings"
+                instance="com.cursor.plugin.settings.CursorSettingsConfigurable"
+                displayName="Cursor AI"
+                parentId="tools"/>
     </extensions>
 
     <actions>
