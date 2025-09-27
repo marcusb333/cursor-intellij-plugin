@@ -1,4 +1,4 @@
-name: Create Release
+name: Simple Release (Legacy)
 
 on:
   push:
@@ -42,12 +42,11 @@ jobs:
         echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release v${{ steps.get_version.outputs.version }}
+        tag_name: ${{ github.ref_name }}
+        name: Release v${{ steps.get_version.outputs.version }}
         body: ${{ steps.release_notes.outputs.notes }}
         draft: false
         prerelease: false
+        generate_release_notes: true

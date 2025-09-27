@@ -1,0 +1,362 @@
+name: Comprehensive Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.0.6)'
+        required: true
+        type: string
+      create_tag:
+        description: 'Create a new tag for this version'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_VERSION: '8.5'
+
+jobs:
+  # Job 1: Validate and prepare release
+  validate-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      tag_name: ${{ steps.extract_version.outputs.tag_name }}
+      is_prerelease: ${{ steps.extract_version.outputs.is_prerelease }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for changelog generation
+
+      - name: Extract version and tag information
+        id: extract_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            TAG_NAME="v$VERSION"
+            IS_PRERELEASE="false"
+          else
+            TAG_NAME="${{ github.ref_name }}"
+            VERSION="${TAG_NAME#v}"
+            # Check if this is a prerelease (contains alpha, beta, rc, etc.)
+            if [[ "$VERSION" =~ (alpha|beta|rc|preview) ]]; then
+              IS_PRERELEASE="true"
+            else
+              IS_PRERELEASE="false"
+            fi
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          
+          echo "Release version: $VERSION"
+          echo "Tag name: $TAG_NAME"
+          echo "Is prerelease: $IS_PRERELEASE"
+
+      - name: Validate version consistency
+        run: |
+          # Extract version from plugin.xml
+          PLUGIN_XML_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g')
+          RELEASE_VERSION="${{ steps.extract_version.outputs.version }}"
+          
+          echo "Plugin XML version: $PLUGIN_XML_VERSION"
+          echo "Release version: $RELEASE_VERSION"
+          
+          if [ "$PLUGIN_XML_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "❌ Version mismatch detected!"
+            echo "Plugin XML version: $PLUGIN_XML_VERSION"
+            echo "Release version: $RELEASE_VERSION"
+            echo "Please update the version in plugin.xml and run sync-version.sh"
+            exit 1
+          fi
+          
+          echo "✅ Version consistency validated"
+
+      - name: Create tag if requested
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_tag == 'true'
+        run: |
+          TAG_NAME="${{ steps.extract_version.outputs.tag_name }}"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+          git push origin "$TAG_NAME"
+
+  # Job 2: Build and test for all platforms
+  build-and-test:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [IC, IU]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Make build script executable
+        run: chmod +x ./build.sh
+
+      - name: Check prerequisites
+        run: ./build.sh check
+
+      - name: Run tests
+        run: ./build.sh test
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Build plugin
+        run: ./build.sh build
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Create distribution
+        run: ./build.sh dist
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Verify plugin
+        run: ./build.sh verify
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cursor-intellij-plugin-${{ matrix.platform }}-${{ needs.validate-release.outputs.version }}
+          path: |
+            build/libs/*.jar
+            build/distributions/*.zip
+          retention-days: 90
+
+  # Job 3: Sign artifacts (if signing keys are available)
+  sign-artifacts:
+    needs: [validate-release, build-and-test]
+    runs-on: ubuntu-latest
+    if: env.SIGNING_KEY != ''
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Set up GPG signing
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_KEY_PASSPHRASE: ${{ secrets.SIGNING_KEY_PASSPHRASE }}
+        run: |
+          echo "$SIGNING_KEY" | gpg --import
+          echo "trust-model always" >> ~/.gnupg/gpg.conf
+          echo "default-key $(gpg --list-keys --with-colons | grep '^pub:' | cut -d: -f5 | head -1)" >> ~/.gnupg/gpg.conf
+
+      - name: Sign artifacts
+        run: |
+          find ./artifacts -name "*.jar" -o -name "*.zip" | while read file; do
+            echo "Signing $file"
+            gpg --armor --detach-sign "$file"
+            # Create checksums
+            sha256sum "$file" > "$file.sha256"
+            sha512sum "$file" > "$file.sha512"
+          done
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-artifacts-${{ needs.validate-release.outputs.version }}
+          path: |
+            artifacts/**/*.jar
+            artifacts/**/*.zip
+            artifacts/**/*.asc
+            artifacts/**/*.sha256
+            artifacts/**/*.sha512
+          retention-days: 90
+
+  # Job 4: Generate release notes
+  generate-release-notes:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    outputs:
+      release_notes: ${{ steps.generate_notes.outputs.release_notes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        id: generate_notes
+        run: |
+          VERSION="${{ needs.validate-release.outputs.version }}"
+          TAG_NAME="${{ needs.validate-release.outputs.tag_name }}"
+          
+          # Extract changelog for this version from README.md
+          RELEASE_NOTES=$(sed -n "/### Version $VERSION/,/^### Version /{/^### Version /!p}" README.md | head -n -1 || true)
+          
+          # If no notes found in changelog, generate from git commits
+          if [ -z "$RELEASE_NOTES" ]; then
+            echo "No changelog found in README.md, generating from git commits..."
+            
+            # Get the previous tag
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            
+            if [ -n "$PREVIOUS_TAG" ]; then
+              COMMITS=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD --no-merges)
+            else
+              COMMITS=$(git log --pretty=format:"- %s" --no-merges -10)
+            fi
+            
+            RELEASE_NOTES="## Release $TAG_NAME
+
+### Changes
+$COMMITS
+
+### Installation
+Download the plugin ZIP file from the assets below and install it through IntelliJ IDEA:
+1. Go to File → Settings → Plugins
+2. Click the gear icon → Install Plugin from Disk
+3. Select the downloaded ZIP file
+
+### Compatibility
+- IntelliJ IDEA Community Edition (IC) 2025.2+
+- IntelliJ IDEA Ultimate Edition (IU) 2025.2+
+- Java 21 or later"
+          fi
+          
+          # Add installation instructions
+          RELEASE_NOTES="$RELEASE_NOTES
+
+### Installation Instructions
+1. Download the appropriate ZIP file for your IntelliJ IDEA edition
+2. Open IntelliJ IDEA
+3. Go to **File** → **Settings** → **Plugins**
+4. Click the gear icon → **Install Plugin from Disk**
+5. Select the downloaded ZIP file
+6. Restart IntelliJ IDEA
+
+### Configuration
+After installation, configure your OpenAI API key:
+1. Go to **File** → **Settings** → **Other Settings** → **Cursor AI**
+2. Enter your OpenAI API key
+3. Save settings and start using the plugin
+
+### Support
+- Report issues: [GitHub Issues](https://github.com/${{ github.repository }}/issues)
+- Documentation: [README.md](https://github.com/${{ github.repository }}/blob/main/README.md)"
+          
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # Job 5: Create GitHub Release
+  create-release:
+    needs: [validate-release, build-and-test, generate-release-notes]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.validate-release.outputs.tag_name }}
+          name: Release ${{ needs.validate-release.outputs.tag_name }}
+          body: ${{ needs.generate-release-notes.outputs.release_notes }}
+          draft: false
+          prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
+          files: |
+            artifacts/cursor-intellij-plugin-IC-${{ needs.validate-release.outputs.version }}/build/distributions/*.zip
+            artifacts/cursor-intellij-plugin-IU-${{ needs.validate-release.outputs.version }}/build/distributions/*.zip
+            artifacts/cursor-intellij-plugin-IC-${{ needs.validate-release.outputs.version }}/build/libs/*.jar
+            artifacts/cursor-intellij-plugin-IU-${{ needs.validate-release.outputs.version }}/build/libs/*.jar
+          generate_release_notes: false
+
+  # Job 6: Publish to GitHub Packages (optional)
+  publish-packages:
+    needs: [validate-release, build-and-test]
+    runs-on: ubuntu-latest
+    if: github.repository_owner != 'github'  # Skip for GitHub-owned repos
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Publish to GitHub Packages
+        run: |
+          # Extract JAR files for publishing
+          find ./artifacts -name "*.jar" -exec cp {} ./ \;
+          
+          # Publish using Gradle (if publishing is configured)
+          if [ -f "build.gradle.kts" ] && grep -q "publishing" build.gradle.kts; then
+            ./gradlew publish
+          else
+            echo "Publishing not configured in build.gradle.kts, skipping..."
+          fi
+        env:
+          USERNAME: ${{ github.actor }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 7: Notify and cleanup
+  notify-completion:
+    needs: [validate-release, create-release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify release completion
+        run: |
+          if [ "${{ needs.create-release.result }}" = "success" ]; then
+            echo "✅ Release ${{ needs.validate-release.outputs.tag_name }} created successfully!"
+            echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate-release.outputs.tag_name }}"
+          else
+            echo "❌ Release creation failed!"
+            exit 1
+          fi
+
+      - name: Update release branch
+        if: github.ref_type == 'tag'
+        run: |
+          # This could be used to update a release branch with the latest changes
+          echo "Release completed for tag: ${{ needs.validate-release.outputs.tag_name }}"
