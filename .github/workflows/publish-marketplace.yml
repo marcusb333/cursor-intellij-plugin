@@ -1,0 +1,245 @@
+name: Publish to JetBrains Marketplace
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.0.6)'
+        required: true
+        type: string
+      channel:
+        description: 'Publishing channel'
+        required: true
+        type: choice
+        options:
+          - default
+          - beta
+          - alpha
+        default: default
+      dry_run:
+        description: 'Dry run (validate only, do not publish)'
+        required: false
+        type: boolean
+        default: false
+  release:
+    types: [published]
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_VERSION: '8.5'
+
+jobs:
+  # Job 1: Validate and prepare for marketplace publishing
+  validate-marketplace:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      channel: ${{ steps.extract_version.outputs.channel }}
+      dry_run: ${{ steps.extract_version.outputs.dry_run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version and publishing parameters
+        id: extract_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            CHANNEL="${{ github.event.inputs.channel }}"
+            DRY_RUN="${{ github.event.inputs.dry_run }}"
+          else
+            # Extract from release event
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"  # Remove 'v' prefix if present
+            CHANNEL="default"
+            DRY_RUN="false"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
+          echo "dry_run=$DRY_RUN" >> $GITHUB_OUTPUT
+          
+          echo "Publishing version: $VERSION"
+          echo "Channel: $CHANNEL"
+          echo "Dry run: $DRY_RUN"
+
+      - name: Validate marketplace credentials
+        run: |
+          if [ -z "${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}" ]; then
+            echo "❌ JETBRAINS_MARKETPLACE_TOKEN secret is not configured"
+            echo "Please add your JetBrains Marketplace token to repository secrets"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.JETBRAINS_MARKETPLACE_PLUGIN_ID }}" ]; then
+            echo "❌ JETBRAINS_MARKETPLACE_PLUGIN_ID secret is not configured"
+            echo "Please add your plugin ID to repository secrets"
+            exit 1
+          fi
+          
+          echo "✅ Marketplace credentials validated"
+
+  # Job 2: Build plugin for marketplace
+  build-for-marketplace:
+    needs: validate-marketplace
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [IU]  # Marketplace typically uses Ultimate edition
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Make build script executable
+        run: chmod +x ./build.sh
+
+      - name: Check prerequisites
+        run: ./build.sh check
+
+      - name: Run tests
+        run: ./build.sh test
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Build plugin
+        run: ./build.sh build
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Create marketplace distribution
+        run: ./build.sh dist
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Verify plugin for marketplace
+        run: ./build.sh verify
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+      - name: Upload marketplace artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketplace-plugin-${{ needs.validate-marketplace.outputs.version }}
+          path: |
+            build/distributions/*.zip
+            build/libs/*.jar
+          retention-days: 30
+
+  # Job 3: Publish to JetBrains Marketplace
+  publish-to-marketplace:
+    needs: [validate-marketplace, build-for-marketplace]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download marketplace artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: marketplace-plugin-${{ needs.validate-marketplace.outputs.version }}
+          path: ./artifacts
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Install IntelliJ Platform Plugin
+        run: |
+          # Install the IntelliJ Platform Plugin for marketplace publishing
+          ./gradlew --version
+
+      - name: Publish to JetBrains Marketplace
+        run: |
+          VERSION="${{ needs.validate-marketplace.outputs.version }}"
+          CHANNEL="${{ needs.validate-marketplace.outputs.channel }}"
+          DRY_RUN="${{ needs.validate-marketplace.outputs.dry_run }}"
+          
+          # Find the plugin ZIP file
+          PLUGIN_ZIP=$(find ./artifacts -name "*.zip" | head -1)
+          
+          if [ -z "$PLUGIN_ZIP" ]; then
+            echo "❌ No plugin ZIP file found in artifacts"
+            exit 1
+          fi
+          
+          echo "Found plugin ZIP: $PLUGIN_ZIP"
+          
+          # Prepare marketplace publishing command
+          PUBLISH_CMD="./gradlew publishPlugin"
+          PUBLISH_CMD="$PUBLISH_CMD -PintellijPublishToken=${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}"
+          PUBLISH_CMD="$PUBLISH_CMD -PintellijPublishChannel=$CHANNEL"
+          
+          if [ "$DRY_RUN" = "true" ]; then
+            PUBLISH_CMD="$PUBLISH_CMD --dry-run"
+            echo "🔍 Running in dry-run mode (validation only)"
+          else
+            echo "🚀 Publishing to JetBrains Marketplace"
+          fi
+          
+          echo "Executing: $PUBLISH_CMD"
+          
+          # Execute the publishing command
+          if eval "$PUBLISH_CMD"; then
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "✅ Dry run completed successfully - plugin is ready for publishing"
+            else
+              echo "✅ Plugin published to JetBrains Marketplace successfully!"
+              echo "📦 Version: $VERSION"
+              echo "📺 Channel: $CHANNEL"
+              echo "🔗 Marketplace URL: https://plugins.jetbrains.com/plugin/${{ secrets.JETBRAINS_MARKETPLACE_PLUGIN_ID }}"
+            fi
+          else
+            echo "❌ Publishing failed"
+            exit 1
+          fi
+
+  # Job 4: Notify completion
+  notify-marketplace:
+    needs: [validate-marketplace, publish-to-marketplace]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify marketplace publishing completion
+        run: |
+          VERSION="${{ needs.validate-marketplace.outputs.version }}"
+          CHANNEL="${{ needs.validate-marketplace.outputs.channel }}"
+          DRY_RUN="${{ needs.validate-marketplace.outputs.dry_run }}"
+          
+          if [ "${{ needs.publish-to-marketplace.result }}" = "success" ]; then
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "✅ Marketplace validation completed successfully!"
+              echo "📦 Version: $VERSION"
+              echo "📺 Channel: $CHANNEL"
+              echo "🔍 Dry run completed - plugin is ready for publishing"
+            else
+              echo "✅ Plugin published to JetBrains Marketplace successfully!"
+              echo "📦 Version: $VERSION"
+              echo "📺 Channel: $CHANNEL"
+              echo "🔗 Marketplace URL: https://plugins.jetbrains.com/plugin/${{ secrets.JETBRAINS_MARKETPLACE_PLUGIN_ID }}"
+              echo "📝 Review the plugin in the JetBrains Marketplace dashboard"
+            fi
+          else
+            echo "❌ Marketplace publishing failed!"
+            echo "📦 Version: $VERSION"
+            echo "📺 Channel: $CHANNEL"
+            echo "🔍 Check the logs for detailed error information"
+            exit 1
+          fi

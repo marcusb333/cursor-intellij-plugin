@@ -148,6 +148,40 @@ The plugin requires an OpenAI API key to function. You can set it in one of thes
 
 ## Development
 
+### Release Management
+
+This project includes a comprehensive release workflow system with automated version management, building, testing, signing, and publishing capabilities.
+
+#### Quick Release Process
+
+1. **Automated Release** (Recommended):
+   ```bash
+   # The system automatically detects changes and creates version bump PRs
+   git push origin main
+   # Review and merge the version bump PR
+   # Create a tag: git tag v0.0.6 && git push origin v0.0.6
+   # GitHub Actions automatically builds and creates the release
+   ```
+
+2. **Manual Release**:
+   ```bash
+   # Use the release script for manual control
+   ./release.sh check          # Check prerequisites
+   ./release.sh release 0.0.6  # Complete release process
+   ./release.sh publish 0.0.6  # Publish to JetBrains Marketplace
+   ```
+
+#### Release Workflows
+
+The project includes several GitHub Actions workflows:
+
+- **Version Bump Workflow** - Automated version management and PR creation
+- **Comprehensive Release Workflow** - Full release pipeline with multi-platform building
+- **Marketplace Publishing Workflow** - JetBrains Marketplace publishing
+- **Build and Test Workflow** - Continuous integration
+
+See [RELEASE_WORKFLOWS.md](RELEASE_WORKFLOWS.md) for detailed documentation.
+
 ### Version Management
 
 This project uses centralized version management. The version is defined in `src/main/resources/META-INF/plugin.xml` and automatically synchronized across all files using the `sync-version.sh` script.
