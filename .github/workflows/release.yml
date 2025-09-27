@@ -1,0 +1,53 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Get version from tag
+      id: get_version
+      run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Extract changelog for this version from README.md
+        VERSION="${{ steps.get_version.outputs.version }}"
+        RELEASE_NOTES=$(sed -n "/### Version $VERSION/,/^### Version /{/^### Version /!p}" README.md | head -n -1)
+
+        # If no notes found in changelog, use default message
+        if [ -z "$RELEASE_NOTES" ]; then
+          RELEASE_NOTES="## Release v$VERSION
+
+          ### Changes
+          - Version bump and documentation updates
+          - Bug fixes and improvements
+          "
+        fi
+
+        echo "notes<<EOF" >> $GITHUB_OUTPUT
+        echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release v${{ steps.get_version.outputs.version }}
+        body: ${{ steps.release_notes.outputs.notes }}
+        draft: false
+        prerelease: false
