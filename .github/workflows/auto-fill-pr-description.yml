@@ -1,182 +1,182 @@
-#name: Auto-Fill PR Description with Cursor AI
-#
-#on:
-#  pull_request:
-#    types: [opened, synchronize]
-#  workflow_dispatch:
-#    inputs:
-#      pr_number:
-#        description: "PR number to update"
-#        required: true
-#        type: number
-#
-#permissions:
-#  contents: read
-#  pull-requests: write
-#
-#jobs:
-#  update-pr-description:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#        with:
-#          fetch-depth: 0
-#
-#      - name: Get PR number
-#        id: pr
-#        run: |
-#          get_pr_number() {
-#            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-#              echo "number=${{ github.event.inputs.pr_number }}" >> $GITHUB_OUTPUT
-#            else
-#              echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-#            fi
-#          }
-#          get_pr_number
-#
-#      - name: Fetch PR details and diff
-#        id: pr_data
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          fetch_pr_details_and_diff() {
-#            set -e
-#            pr_number=${{ steps.pr.outputs.number }}
-#            repo=${{ github.repository }}
-#
-#            pr_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-#              "https://api.github.com/repos/${repo}/pulls/${pr_number}")
-#
-#            title=$(echo "$pr_data" | jq -r '.title')
-#            current_body=$(echo "$pr_data" | jq -r '.body // ""')
-#
-#            files_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-#              "https://api.github.com/repos/${repo}/pulls/${pr_number}/files")
-#
-#            files_summary=$(echo "$files_data" | jq -r '
-#              map(select(.status != "removed")) |
-#              map("\(.filename): +\(.additions)/-\(.deletions)") |
-#              join(", ")
-#            ')
-#
-#            commits_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-#              "https://api.github.com/repos/${repo}/pulls/${pr_number}/commits")
-#
-#            commit_messages=$(echo "$commits_data" | jq -r '
-#              map(.commit.message | split("\n")[0]) |
-#              unique |
-#              join("; ")
-#            ')
-#
-#            diff_content=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-#              -H "Accept: application/vnd.github.diff" \
-#              "https://api.github.com/repos/${repo}/pulls/${pr_number}" | head -c 8000)
-#
-#            echo "$title" > pr_title.txt
-#            echo "$current_body" > pr_body.txt
-#            echo "$files_summary" > files_summary.txt
-#            echo "$commit_messages" > commit_messages.txt
-#            echo "$diff_content" > diff_content.txt
-#
-#            echo "title=$title" >> $GITHUB_OUTPUT
-#            echo "current_body<<EOF" >> $GITHUB_OUTPUT
-#            echo "$current_body" >> $GITHUB_OUTPUT
-#            echo "EOF" >> $GITHUB_OUTPUT
-#          }
-#          fetch_pr_details_and_diff
-#
-#      - name: Generate AI-powered PR description
-#        id: ai_description
-#        env:
-#          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-#        run: |
-#          generate_ai_pr_description() {
-#            set -e
-#            if [ -z "$OPENAI_API_KEY" ]; then
-#              echo "Error: OPENAI_API_KEY secret not set"
-#              exit 1
-#            fi
-#
-#            title=$(cat pr_title.txt)
-#            files_summary=$(cat files_summary.txt)
-#            commit_messages=$(cat commit_messages.txt)
-#            diff_content=$(cat diff_content.txt)
-#
-#            prompt="You are helping to auto-fill a GitHub Pull Request template for an IntelliJ plugin project called 'Cursor AI Assistant'.\n\nPR Title: $title\n\nFiles Changed: $files_summary\n\nCommit Messages: $commit_messages\n\nDiff Preview: $diff_content\n\nPlease provide a JSON response with the following structure:\n{\n  \"brief_description_and_context\": \"1-2 sentence overview of what this PR does and why\",\n  \"summary\": \"Detailed explanation of the changes and their purpose\",\n  \"changes\": \"chore, docs, feat, fix, refactor, style, or test followed by the change\",\n  \"change_brief_descriptions\": \"Brief description of each change type selected\",\n  \"key_changes\": \"Bullet points of the most important technical changes\",\n  \"compatibility_and_risk\": \"Assessment of compatibility impact and risk level (Low/Medium/High)\",\n  \"security_review\": \"Any security considerations or confirmations needed\"\n}\n\nFocus on:\n- IntelliJ plugin development context\n- Kotlin/Java code changes\n- API integrations (especially OpenAI/Cursor AI)\n- Build system changes (Gradle)\n- Testing improvements\n\nKeep responses concise and technical."
-#
-#            response=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
-#              -H "Content-Type: application/json" \
-#              -H "Authorization: Bearer $OPENAI_API_KEY" \
-#              -d "{\n                \"model\": \"gpt-4\",\n                \"messages\": [\n                  {\"role\": \"system\", \"content\": \"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"},\n                  {\"role\": \"user\", \"content\": $(echo \"$prompt\" | jq -R -s .)}\n                ],\n                \"max_tokens\": 1000,\n                \"temperature\": 0.3\n              }")
-#
-#            ai_content=$(echo "$response" | jq -r '.choices[0].message.content')
-#
-#            if [ "$ai_content" = "null" ] || [ -z "$ai_content" ]; then
-#              echo "Error: Failed to get AI response"
-#              echo "Response: $response"
-#              exit 1
-#            fi
-#
-#            echo "$ai_content" > ai_response.json
-#            echo "ai_content<<EOF" >> $GITHUB_OUTPUT
-#            echo "$ai_content" >> $GITHUB_OUTPUT
-#            echo "EOF" >> $GITHUB_OUTPUT
-#          }
-#          generate_ai_pr_description
-#
-#      - name: Update PR description
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          update_pr_description() {
-#            set -e
-#            pr_number=${{ steps.pr.outputs.number }}
-#            repo=${{ github.repository }}
-#            current_body="${{ steps.pr_data.outputs.current_body }}"
-#            ai_content="${{ steps.ai_description.outputs.ai_content }}"
-#
-#            if [[ "$current_body" != *"{brief_description_and_context}"* && \
-#                  "$current_body" != *"{summary}"* && \
-#                  "$current_body" != *"{change_types}"* && \
-#                  "$current_body" != *"{change_brief_descriptions}"* && \
-#                  "$current_body" != *"{key_changes}"* && \
-#                  "$current_body" != *"{compatibility_and_risk}"* && \
-#                  "$current_body" != *"{security_review}"* ]]; then
-#              echo "PR description doesn't contain any template placeholders, skipping update"
-#              exit 0
-#            fi
-#
-#            brief_description=$(echo "$ai_content" | jq -r '.brief_description_and_context // "N/A"')
-#            summary=$(echo "$ai_content" | jq -r '.summary // "N/A"')
-#            change_types=$(echo "$ai_content" | jq -r '.changes // "N/A"')
-#            change_brief_descriptions=$(echo "$ai_content" | jq -r '.change_brief_descriptions // "N/A"')
-#            key_changes=$(echo "$ai_content" | jq -r '.key_changes // "N/A"')
-#            compatibility_and_risk=$(echo "$ai_content" | jq -r '.compatibility_and_risk // "N/A"')
-#            security_review=$(echo "$ai_content" | jq -r '.security_review // "N/A"')
-#
-#            updated_body=$(echo "$current_body" | \
-#              sed "s|{brief_description_and_context}|$brief_description|g" | \
-#              sed "s|{summary}|$summary|g" | \
-#              sed "s|{change_types}|$change_types|g" | \
-#              sed "s|{change_brief_descriptions}|$change_brief_descriptions|g" | \
-#              sed "s|{key_changes}|$key_changes|g" | \
-#              sed "s|{compatibility_and_risk}|$compatibility_and_risk|g" | \
-#              sed "s|{security_review}|$security_review|g")
-#
-#            json_payload=$(jq -n --arg body "$updated_body" '{body: $body}')
-#
-#            curl -s -X PATCH \
-#              -H "Authorization: Bearer $GH_TOKEN" \
-#              -H "Accept: application/vnd.github+json" \
-#              -d "$json_payload" \
-#              "https://api.github.com/repos/${repo}/pulls/${pr_number}"
-#
-#            echo "✅ PR description updated with AI-generated content"
-#            echo ""
-#            echo "Generated content:"
-#            echo "Brief Description: $brief_description"
-#            echo "Changes: $change_types"
-#            echo "Risk Assessment: $compatibility_and_risk"
-#          }
-#          update_pr_description
+name: Auto-Fill PR Description with Cursor AI
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to update"
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  update-pr-description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR number
+        id: pr
+        run: |
+          get_pr_number() {
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "number=${{ github.event.inputs.pr_number }}" >> $GITHUB_OUTPUT
+            else
+              echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            fi
+          }
+          get_pr_number
+
+      - name: Fetch PR details and diff
+        id: pr_data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          fetch_pr_details_and_diff() {
+            set -e
+            pr_number=${{ steps.pr.outputs.number }}
+            repo=${{ github.repository }}
+
+            pr_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/${repo}/pulls/${pr_number}")
+
+            title=$(echo "$pr_data" | jq -r '.title')
+            current_body=$(echo "$pr_data" | jq -r '.body // ""')
+
+            files_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/${repo}/pulls/${pr_number}/files")
+
+            files_summary=$(echo "$files_data" | jq -r '
+              map(select(.status != "removed")) |
+              map("\(.filename): +\(.additions)/-\(.deletions)") |
+              join(", ")
+            ')
+
+            commits_data=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/${repo}/pulls/${pr_number}/commits")
+
+            commit_messages=$(echo "$commits_data" | jq -r '
+              map(.commit.message | split("\n")[0]) |
+              unique |
+              join("; ")
+            ')
+
+            diff_content=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github.diff" \
+              "https://api.github.com/repos/${repo}/pulls/${pr_number}" | head -c 8000)
+
+            echo "$title" > pr_title.txt
+            echo "$current_body" > pr_body.txt
+            echo "$files_summary" > files_summary.txt
+            echo "$commit_messages" > commit_messages.txt
+            echo "$diff_content" > diff_content.txt
+
+            echo "title=$title" >> $GITHUB_OUTPUT
+            echo "current_body<<EOF" >> $GITHUB_OUTPUT
+            echo "$current_body" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          }
+          fetch_pr_details_and_diff
+
+      - name: Generate AI-powered PR description
+        id: ai_description
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          generate_ai_pr_description() {
+            set -e
+            if [ -z "$OPENAI_API_KEY" ]; then
+              echo "Error: OPENAI_API_KEY secret not set"
+              exit 1
+            fi
+
+            title=$(cat pr_title.txt)
+            files_summary=$(cat files_summary.txt)
+            commit_messages=$(cat commit_messages.txt)
+            diff_content=$(cat diff_content.txt)
+
+            prompt="You are helping to auto-fill a GitHub Pull Request template for an IntelliJ plugin project called 'Cursor AI Assistant'.\n\nPR Title: $title\n\nFiles Changed: $files_summary\n\nCommit Messages: $commit_messages\n\nDiff Preview: $diff_content\n\nPlease provide a JSON response with the following structure:\n{\n  \"brief_description_and_context\": \"1-2 sentence overview of what this PR does and why\",\n  \"summary\": \"Detailed explanation of the changes and their purpose\",\n  \"changes\": \"chore, docs, feat, fix, refactor, style, or test followed by the change\",\n  \"change_brief_descriptions\": \"Brief description of each change type selected\",\n  \"key_changes\": \"Bullet points of the most important technical changes\",\n  \"compatibility_and_risk\": \"Assessment of compatibility impact and risk level (Low/Medium/High)\",\n  \"security_review\": \"Any security considerations or confirmations needed\"\n}\n\nFocus on:\n- IntelliJ plugin development context\n- Kotlin/Java code changes\n- API integrations (especially OpenAI/Cursor AI)\n- Build system changes (Gradle)\n- Testing improvements\n\nKeep responses concise and technical."
+
+            response=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -d "{\n                \"model\": \"gpt-4\",\n                \"messages\": [\n                  {\"role\": \"system\", \"content\": \"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"},\n                  {\"role\": \"user\", \"content\": $(echo \"$prompt\" | jq -R -s .)}\n                ],\n                \"max_tokens\": 1000,\n                \"temperature\": 0.3\n              }")
+
+            ai_content=$(echo "$response" | jq -r '.choices[0].message.content')
+
+            if [ "$ai_content" = "null" ] || [ -z "$ai_content" ]; then
+              echo "Error: Failed to get AI response"
+              echo "Response: $response"
+              exit 1
+            fi
+
+            echo "$ai_content" > ai_response.json
+            echo "ai_content<<EOF" >> $GITHUB_OUTPUT
+            echo "$ai_content" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          }
+          generate_ai_pr_description
+
+      - name: Update PR description
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          update_pr_description() {
+            set -e
+            pr_number=${{ steps.pr.outputs.number }}
+            repo=${{ github.repository }}
+            current_body="${{ steps.pr_data.outputs.current_body }}"
+            ai_content="${{ steps.ai_description.outputs.ai_content }}"
+
+            if [[ "$current_body" != *"{brief_description_and_context}"* && \
+                  "$current_body" != *"{summary}"* && \
+                  "$current_body" != *"{change_types}"* && \
+                  "$current_body" != *"{change_brief_descriptions}"* && \
+                  "$current_body" != *"{key_changes}"* && \
+                  "$current_body" != *"{compatibility_and_risk}"* && \
+                  "$current_body" != *"{security_review}"* ]]; then
+              echo "PR description doesn't contain any template placeholders, skipping update"
+              exit 0
+            fi
+
+            brief_description=$(echo "$ai_content" | jq -r '.brief_description_and_context // "N/A"')
+            summary=$(echo "$ai_content" | jq -r '.summary // "N/A"')
+            change_types=$(echo "$ai_content" | jq -r '.changes // "N/A"')
+            change_brief_descriptions=$(echo "$ai_content" | jq -r '.change_brief_descriptions // "N/A"')
+            key_changes=$(echo "$ai_content" | jq -r '.key_changes // "N/A"')
+            compatibility_and_risk=$(echo "$ai_content" | jq -r '.compatibility_and_risk // "N/A"')
+            security_review=$(echo "$ai_content" | jq -r '.security_review // "N/A"')
+
+            updated_body=$(echo "$current_body" | \
+              sed "s|{brief_description_and_context}|$brief_description|g" | \
+              sed "s|{summary}|$summary|g" | \
+              sed "s|{change_types}|$change_types|g" | \
+              sed "s|{change_brief_descriptions}|$change_brief_descriptions|g" | \
+              sed "s|{key_changes}|$key_changes|g" | \
+              sed "s|{compatibility_and_risk}|$compatibility_and_risk|g" | \
+              sed "s|{security_review}|$security_review|g")
+
+            json_payload=$(jq -n --arg body "$updated_body" '{body: $body}')
+
+            curl -s -X PATCH \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -d "$json_payload" \
+              "https://api.github.com/repos/${repo}/pulls/${pr_number}"
+
+            echo "✅ PR description updated with AI-generated content"
+            echo ""
+            echo "Generated content:"
+            echo "Brief Description: $brief_description"
+            echo "Changes: $change_types"
+            echo "Risk Assessment: $compatibility_and_risk"
+          }
+          update_pr_description
