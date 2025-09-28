@@ -141,7 +141,7 @@ EOF
               -H "Authorization: Bearer $CURSOR_API_KEY" \
               -d "{\n                \"prompt\": { $(echo \"$prompt\" | jq -R -s .),\n      add          \"system\": "\"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"\n              }" }
 
-            ai_content=$(echo "$response" | jq -r '.choices[0].message.content')
+            ai_content=$(echo "$response" | jq -r '.content')
 
             if [ "$ai_content" = "null" ] || [ -z "$ai_content" ]; then
               echo "Error: Failed to get Cursor AI response"
