@@ -24,7 +24,7 @@ import org.mockito.Mockito.*
  * Tests verify that the action handles edge cases gracefully and properly
  * manages its enabled state based on project context.
  * 
- * @author Cursor Plugin Team
+ * @author Marcus Bowden
  * @since 1.0.0
  */
 @ExtendWith(MockitoExtension::class)

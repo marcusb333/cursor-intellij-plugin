@@ -38,8 +38,8 @@ import com.intellij.openapi.wm.ToolWindowManager
  *   <li>Persistent chat history</li>
  * </ul>
  *
- * @author Cursor AI Plugin Team
- * @version 0.5.0
+ * @author Marcus Bowden
+ * @version 0.6.0
  * @since 1.0
  * @see CursorToolWindowFactory
  * @see CursorChatPanel

@@ -63,8 +63,8 @@ import javax.swing.SwingUtilities
  * format. It ensures proper threading for UI updates and provides error handling
  * for network and API issues.</p>
  *
- * @author Cursor AI Plugin Team
- * @version 0.5.0
+ * @author Marcus Bowden
+ * @version 0.6.0
  * @since 1.0
  * @see CompletionsChatAsyncService
  * @see CursorToolWindowFactory

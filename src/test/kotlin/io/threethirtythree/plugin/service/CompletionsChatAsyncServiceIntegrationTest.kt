@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
  * or system properties. Set one of the following:
  * - Environment variable: CURSOR_API_KEY
  *
- * @author Cursor Plugin Team
+ * @author Marcus Bowden
  * @since 1.0.0
  */
 @ExtendWith(MockitoExtension::class)

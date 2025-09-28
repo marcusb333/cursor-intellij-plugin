@@ -336,7 +336,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Version 0.5.0 (Current)
+### Version 0.6.0 (Current)
+
+- 📦 **Package Restructuring**: Migrated package name to `io.threethirtythree.plugin` for better organization
+- 🔧 **Build System Updates**: Enhanced build scripts and configuration management
+- 🧪 **Testing Improvements**: Expanded test coverage and improved reliability
+- 🚀 **Performance Optimizations**: Streamlined code structure and dependencies
+
+### Version 0.5.0
 
 - ⚙️ **Settings Management**: Implemented comprehensive settings panel for API configuration
 - 🔧 **Platform Upgrade**: Upgraded to latest IntelliJ Platform plugin for enhanced compatibility

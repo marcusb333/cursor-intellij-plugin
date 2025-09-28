@@ -42,7 +42,7 @@ import io.threethirtythree.plugin.service.CompletionsChatAsyncService
  * Tests verify that the action properly validates text selection and
  * provides appropriate user feedback when no code is selected.
  *
- * @author Cursor Plugin Team
+ * @author Marcus Bowden
  * @since 1.0.0
  */
 @ExtendWith(MockitoExtension::class)
