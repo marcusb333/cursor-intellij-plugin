@@ -153,11 +153,10 @@ verify_plugin() {
 
 # Function to check for API key
 check_api_key() {
-    if [ -n "${OPENAI_API_KEY:-}" ]; then
-        print_success "OPENAI_API_KEY environment variable is set"
-    else
-        print_warning "No API key configured. Set OPENAI_API_KEY environment variable or cursor.api.key system property"
-        print_status "Example: export OPENAI_API_KEY=your_api_key_here"
+    if [ -n "$CURSOR_API_KEY" ]; then
+            print_success "CURSOR_API_KEY environment variable is set"
+      elif [ -n "$(java -Dcursor.api.key=test -version 2>&1 | grep 'cursor.api.key')" ]; then
+          print_success "cursor.api.key system property detected"
     fi
 }
 

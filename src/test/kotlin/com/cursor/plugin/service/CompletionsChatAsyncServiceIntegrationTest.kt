@@ -1,10 +1,10 @@
 package com.cursor.plugin.service
 
+import com.cursor.plugin.core.CursorAIResponseCallback
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
-import com.cursor.plugin.core.CursorAIResponseCallback
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
  *
  * Note: This test requires a valid OpenAI API key to be set in the environment
  * or system properties. Set one of the following:
- * - Environment variable: OPENAI_API_KEY
+ * - Environment variable: CURSOR_API_KEY
  *
  * @author Cursor Plugin Team
  * @since 1.0.0
@@ -83,7 +83,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
         // Then - this will return the environment variable if it's set
         // We just verify that the method works
         // The actual value depends on environment setup
-        assertTrue(originalEnvVars.containsKey("OPENAI_API_KEY"))
+        assertTrue(originalEnvVars.containsKey("CURSOR_API_KEY"))
         assertNull(apiKey)
     }
 
@@ -193,7 +193,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
     @Disabled("Integration test requires real API key - disabled for CI")
     fun testSendMessageWithValidApiKey() {
         // Given - check if we have a valid API key
-        val apiKey = System.getenv("OPENAI_API_KEY")
+        val apiKey = System.getenv("CURSOR_API_KEY")
 
         if (apiKey.isNullOrBlank() || apiKey.startsWith("test-") || apiKey == "test-key") {
             println("Skipping integration test - no valid OpenAI API key found")
@@ -245,7 +245,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
     // Helper methods for managing environment variables and system properties
 
     private fun storeOriginalValues() {
-        originalEnvVars["OPENAI_API_KEY"] = System.getenv("OPENAI_API_KEY")
+        originalEnvVars["CURSOR_API_KEY"] = System.getenv("CURSOR_API_KEY")
     }
 
     private fun restoreOriginalValues() {

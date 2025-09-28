@@ -31,7 +31,7 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 2. Set your OpenAI API key as an environment variable:
 
    ```bash
-   export OPENAI_API_KEY=your_api_key_here
+   export CURSOR_API_KEY=your_api_key_here
    ```
 
    Or set it as a system property:
@@ -133,7 +133,7 @@ The plugin requires an OpenAI API key to function. You can set it in one of thes
 1. **Environment Variable**:
 
    ```bash
-   export OPENAI_API_KEY=your_api_key_here
+   export CURSOR_API_KEY=your_api_key_here
    ```
 
 2. **System Property**:

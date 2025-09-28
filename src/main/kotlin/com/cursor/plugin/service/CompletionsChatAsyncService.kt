@@ -55,11 +55,11 @@ class CompletionsChatAsyncService(
         if (!settingsApiKey.isNullOrEmpty()) {
             return settingsApiKey.trim()
         }
-        
-        // 2. Fall back to environment variable OPENAI_API_KEY
+
+        // 2. Fall back to environment variable CURSOR_API_KEY
         var apiKey: String? = null
         try {
-            apiKey = System.getenv("OPENAI_API_KEY")
+            apiKey = System.getenv("CURSOR_API_KEY")
             if (!apiKey.isNullOrEmpty()) {
                 return apiKey.trim()
             }
@@ -83,7 +83,7 @@ class CompletionsChatAsyncService(
             val errorMessage =
                 "OpenAI API key not found. Please configure it in:\n" +
                     "1. Plugin Settings: File → Settings → Cursor AI\n" +
-                    "2. Or set environment variable: export OPENAI_API_KEY=your_key_here\n" +
+                    "2. Or set environment variable: export CURSOR_API_KEY=your_key_here\n" +
                     "For more details, see the plugin documentation."
             callback.onError(errorMessage)
             return
@@ -113,7 +113,7 @@ class CompletionsChatAsyncService(
                 val settings = CursorSettingsState.instance
                 val apiEndpoint = settings.apiEndpoint
                 val timeout = settings.timeoutSeconds.toLong()
-                
+
                 val request =
                     HttpRequest
                         .newBuilder()
