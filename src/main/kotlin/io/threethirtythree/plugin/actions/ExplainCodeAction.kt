@@ -36,8 +36,8 @@ import javax.swing.SwingUtilities
  * <p>The action will send the selected code to the Cursor AI service along with
  * relevant context and display the explanation to the user.</p>
  *
- * @author Cursor AI Plugin Team
- * @version 0.5.0
+ * @author Marcus Bowden
+ * @version 0.6.0
  * @since 1.0
  * @see CompletionsChatAsyncService
  * @see com.intellij.openapi.actionSystem.AnAction

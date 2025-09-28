@@ -41,8 +41,8 @@ import org.jetbrains.annotations.NotNull
  *   <li>Context-aware assistance</li>
  * </ul>
  *
- * @author Cursor AI Plugin Team
- * @version 0.5.0
+ * @author Marcus Bowden
+ * @version 0.6.0
  * @since 1.0
  * @see CursorChatPanel
  * @see OpenCursorAIAction

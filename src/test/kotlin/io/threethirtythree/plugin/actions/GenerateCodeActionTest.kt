@@ -40,7 +40,7 @@ import io.threethirtythree.plugin.service.CompletionsChatAsyncService
  * Tests verify that the action properly interacts with the AI service and
  * handles user input scenarios correctly.
  *
- * @author Cursor Plugin Team
+ * @author Marcus Bowden
  * @since 1.0.0
  */
 @ExtendWith(MockitoExtension::class)

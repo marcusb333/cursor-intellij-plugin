@@ -20,8 +20,8 @@ import org.jetbrains.annotations.NotNull
  *   <li>AI-powered assistance through a dedicated tool window</li>
  * </ul>
 *~
- * @author Cursor AI Plugin Team
- * @version 0.5.0
+ * @author Marcus Bowden
+ * @version 0.6.0
  * @since 1.0
  * @see CompletionsChatAsyncService
  * @see StartupActivity
