@@ -229,9 +229,23 @@ show_build_info() {
     # Check for xmllint
     if ! command -v xmllint &> /dev/null; then
         print_warning "xmllint is not installed. Please install libxml2-utils to enable robust XML parsing."
-        PLUGIN_VERSION="Unknown"
-        PLUGIN_ID="Unknown"
-        PLUGIN_NAME="Unknown"
+        # Fallback: extract values using grep/sed
+        PLUGIN_VERSION=$(grep -oP '<version>\K[^<]+' src/main/resources/META-INF/plugin.xml 2>/dev/null | head -n1 || echo "")
+        PLUGIN_ID=$(grep -oP '<id>\K[^<]+' src/main/resources/META-INF/plugin.xml 2>/dev/null | head -n1 || echo "")
+        PLUGIN_NAME=$(grep -oP '<name>\K[^<]+' src/main/resources/META-INF/plugin.xml 2>/dev/null | head -n1 || echo "")
+        # Error handling for empty values
+        if [ -z "$PLUGIN_VERSION" ]; then
+            print_warning "Could not extract <version> from plugin.xml (fallback)"
+            PLUGIN_VERSION="Unknown"
+        fi
+        if [ -z "$PLUGIN_ID" ]; then
+            print_warning "Could not extract <id> from plugin.xml (fallback)"
+            PLUGIN_ID="Unknown"
+        fi
+        if [ -z "$PLUGIN_NAME" ]; then
+            print_warning "Could not extract <name> from plugin.xml (fallback)"
+            PLUGIN_NAME="Unknown"
+        fi
     else
         PLUGIN_VERSION=$(xmllint --xpath 'string(//version)' src/main/resources/META-INF/plugin.xml 2>/dev/null || echo "")
         PLUGIN_ID=$(xmllint --xpath 'string(//id)' src/main/resources/META-INF/plugin.xml 2>/dev/null || echo "")
