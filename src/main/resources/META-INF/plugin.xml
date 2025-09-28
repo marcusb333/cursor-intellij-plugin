@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>com.cursor.plugin</id>
+    <id>io.threethirtythree.plugin</id>
     <name>Cursor AI Assistant</name>
     <vendor email="support@cursor.com" url="https://cursor.com">Cursor</vendor>
     <version>0.5.0</version>
@@ -64,37 +64,37 @@
                    secondary="true" 
                    icon="/icons/cursor-icon.png" 
                    anchor="right" 
-                   factoryClass="com.cursor.plugin.ui.CursorToolWindowFactory"/>
+                   factoryClass="io.threethirtythree.plugin.ui.CursorToolWindowFactory"/>
                    
         <!-- Settings State Service -->
-        <applicationService serviceImplementation="com.cursor.plugin.settings.CursorSettingsState"/>
+        <applicationService serviceImplementation="io.threethirtythree.plugin.settings.CursorSettingsState"/>
         
         <!-- Settings Configurable -->
         <applicationConfigurable 
                 id="cursor.settings"
-                instance="com.cursor.plugin.settings.CursorSettingsConfigurable"
+                instance="io.threethirtythree.plugin.settings.CursorSettingsConfigurable"
                 displayName="Cursor AI"
                 parentId="tools"/>
     </extensions>
 
     <actions>
-        <action id="com.cursor.plugin.OpenCursorAI" 
-                class="com.cursor.plugin.actions.OpenCursorAIAction" 
+        <action id="io.threethirtythree.plugin.OpenCursorAI"
+                class="io.threethirtythree.plugin.actions.OpenCursorAIAction" 
                 text="Open Cursor AI" 
                 description="Open the Cursor AI assistant">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift C"/>
         </action>
         
-        <action id="com.cursor.plugin.GenerateCode" 
-                class="com.cursor.plugin.actions.GenerateCodeAction" 
+        <action id="io.threethirtythree.plugin.GenerateCode"
+                class="io.threethirtythree.plugin.actions.GenerateCodeAction" 
                 text="Generate Code with Cursor" 
                 description="Generate code using Cursor AI">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         
-        <action id="com.cursor.plugin.ExplainCode" 
-                class="com.cursor.plugin.actions.ExplainCodeAction" 
+        <action id="io.threethirtythree.plugin.ExplainCode"
+                class="io.threethirtythree.plugin.actions.ExplainCodeAction" 
                 text="Explain Code with Cursor" 
                 description="Get explanation for selected code">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>

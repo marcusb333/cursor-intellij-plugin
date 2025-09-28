@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.9.0"
 }
 
-group = "com.cursor"
+group = "io.threethirtythree"
 version = "0.5.0"
 
 repositories {

@@ -17,7 +17,7 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 - IntelliJ IDEA (any version - no version restrictions)
 - Java 21 or later
-- OpenAI API key (get one from [OpenAI](https://platform.openai.com/api-keys))
+- Cursor API key (get one from [Cursor](https://cursor.sh))
 
 ### Building from Source
 
@@ -28,16 +28,10 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    cd cursor-intellij-plugin
    ```
 
-2. Set your OpenAI API key as an environment variable:
+2. Set your Cursor API key as an environment variable:
 
    ```bash
    export CURSOR_API_KEY=your_api_key_here
-   ```
-
-   Or set it as a system property:
-
-   ```bash
-   -Dopenai.api.key=your_api_key_here
    ```
 
 3. Build the plugin using the build script (recommended):
@@ -128,21 +122,15 @@ The Cursor AI panel provides a chat interface where you can:
 
 ### API Key Setup
 
-The plugin requires an OpenAI API key to function. You can set it in one of these ways:
+The plugin requires a Cursor API key to function. You can set it in one of these ways:
 
-1. **Environment Variable**:
+1. **Environment Variable** (recommended):
 
    ```bash
    export CURSOR_API_KEY=your_api_key_here
    ```
 
-2. **System Property**:
-
-   ```bash
-   -Dopenai.api.key=your_api_key_here
-   ```
-
-3. **Plugin Settings** (coming soon):
+2. **Plugin Settings**:
    - File → Settings → Other Settings → Cursor AI
    - Enter your API key in the settings panel
 
@@ -268,10 +256,10 @@ For more detailed testing information, see [TESTING.md](TESTING.md).
 
 ## API Integration
 
-The plugin communicates with OpenAI's API using the following endpoint:
+The plugin communicates with OpenAI's API through Cursor's service using the following endpoint:
 
 - **Base URL**: `https://api.openai.com/v1/chat/completions`
-- **Authentication**: Bearer token (API key)
+- **Authentication**: Bearer token (Cursor API key)
 - **Request Format**: JSON with model, messages, and parameters
 
 ### Example API Request
@@ -333,7 +321,7 @@ The plugin communicates with OpenAI's API using the following endpoint:
 To enable debug logging, add this system property when starting IntelliJ:
 
 ```bash
--Dcom.cursor.plugin.debug=true
+-Dio.threethirtythree.plugin.debug=true
 ```
 
 ## License

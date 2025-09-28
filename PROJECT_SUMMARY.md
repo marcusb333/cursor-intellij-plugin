@@ -8,7 +8,7 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 
 ### Core Components
 
-1. **CompletionsChatAsyncService** - Main service class that handles API communication with OpenAI
+1. **CompletionsChatAsyncService** - Main service class that handles API communication with Cursor/OpenAI
 2. **CursorPlugin** - Primary plugin entry point and lifecycle management
 3. **CursorToolWindowFactory** - Creates and manages the AI chat tool window
 4. **CursorChatPanel** - User interface for the chat functionality
@@ -31,7 +31,7 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 - ✅ Chat interface in tool window
 - ✅ Context menu actions for code generation
 - ✅ Context menu actions for code explanation
-- ✅ API key configuration via environment variables/system properties
+- ✅ API key configuration via environment variables and settings
 - ✅ Error handling and user feedback
 - ✅ Main dispatcher usage for UI operations
 
@@ -81,8 +81,8 @@ cursor-intellij-plugin/
 ## API Integration
 
 ### Endpoint Configuration
-- **Base URL**: `https://api.openai.com/v1/chat/completions`
-- **Authentication**: Bearer token authentication
+- **Base URL**: `https://api.openai.com/v1/chat/completions` (Cursor service)
+- **Authentication**: Bearer token authentication (Cursor API key)
 - **Request Format**: JSON with structured parameters
 
 ### Request Structure
@@ -108,7 +108,7 @@ cursor-intellij-plugin/
 ## Testing Strategy
 
 ### Test Coverage
-- **Total Tests**: 16 tests across 4 test classes
+- **Total Tests**: 23 tests across multiple test classes
 - **Success Rate**: 100% passing (all tests)
 - **Coverage Areas**:
   - Action implementations (12 tests)
@@ -130,9 +130,9 @@ cursor-intellij-plugin/
 ### API Key Configuration
 The plugin supports multiple methods for API key configuration:
 
-1. **Environment Variable**: `CURSOR_API_KEY`
-2. **System Property**: `openai.api.key`
-3. **Future**: Settings panel (planned feature)
+1. **Environment Variable**: `CURSOR_API_KEY` (recommended)
+2. **Settings Panel**: Configure through plugin settings
+3. **Future**: Additional configuration methods
 
 ### Plugin Configuration
 - Compatible with all IntelliJ IDEA versions (no version restrictions)
@@ -177,16 +177,16 @@ The plugin supports multiple methods for API key configuration:
 - ✅ Documentation
 
 ### Known Limitations
-- API key must be configured via environment/system properties
-- Limited to GPT-4 model
+- Limited to GPT-3.5-turbo model
 - Basic chat interface (no message persistence)
+- Network-dependent functionality
 
 ### Future Enhancements
-- Settings panel for configuration
 - Message history persistence
 - Support for additional AI models
 - Custom prompt templates
 - Advanced code analysis features
+- Enhanced UI/UX improvements
 
 ## Dependencies
 
