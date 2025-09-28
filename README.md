@@ -38,16 +38,32 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    export CURSOR_API_KEY=your_cursor_api_key_here
    ```
 
-3. Build the plugin using the build script (recommended):
+3. Build the plugin using one of the following methods:
 
+   **Option A: Using Gradle Wrapper (Recommended)**
+   
    ```bash
    ./build.sh all
    ```
-
-   Or use Gradle directly:
-
+   
+   Or use Gradle wrapper directly:
+   
    ```bash
    ./gradlew buildPlugin
+   ```
+
+   **Option B: Using Global Gradle Installation**
+   
+   If you have Gradle installed globally (e.g., via Homebrew), you can use:
+   
+   ```bash
+   ./build-no-wrapper.sh all
+   ```
+   
+   Or use global Gradle directly:
+   
+   ```bash
+   gradle buildPlugin
    ```
 
    To build for a specific IntelliJ platform:
@@ -55,9 +71,13 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
    ```bash
    # Build for IntelliJ IDEA Community Edition
    ./gradlew buildPlugin -PplatformType=IC
+   # or with global Gradle:
+   gradle buildPlugin -PplatformType=IC
    
    # Build for IntelliJ IDEA Ultimate Edition (default)
    ./gradlew buildPlugin -PplatformType=IU
+   # or with global Gradle:
+   gradle buildPlugin -PplatformType=IU
    ```
 
 4. Install the plugin:
@@ -67,7 +87,12 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 ### Build Script Commands
 
-The project includes a comprehensive build script (`build.sh`) that provides the following commands:
+The project includes two comprehensive build scripts:
+
+- **`build.sh`** - Uses the Gradle wrapper (recommended for most users)
+- **`build-no-wrapper.sh`** - Uses global Gradle installation (requires Gradle installed globally)
+
+Both scripts provide the same commands:
 
 ```bash
 # Check prerequisites and configuration
@@ -98,7 +123,7 @@ The project includes a comprehensive build script (`build.sh`) that provides the
 ./build.sh help
 ```
 
-The build script provides colored output, error checking, and will verify that you have the correct Java version (21+) and Gradle wrapper before running any commands.
+Both build scripts provide colored output, error checking, and will verify that you have the correct Java version (21+) before running any commands. The wrapper-based script (`build.sh`) also verifies the Gradle wrapper, while the no-wrapper script (`build-no-wrapper.sh`) verifies your global Gradle installation.
 
 ## Usage
 
