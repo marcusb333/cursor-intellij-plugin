@@ -10,9 +10,7 @@ name: Gradle Package
 on:
   push:
     branches:
-    - main
-    - cleanup/*
-    - release/*
+    - release/v*
   pull_request:
     branches:
     - main
@@ -71,11 +69,9 @@ jobs:
           build/libs/*.jar
           build/distributions/*.zip
         retention-days: 30
-    
-    # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
-    # the publishing section of your build.gradle.kts
-    # - name: Publish to GitHub Packages
-    #   run: ./gradlew publish
-    #   env:
-    #     USERNAME: ${{ github.actor }}
-    #     TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish to GitHub Packages
+      run: ./gradlew publish
+      env:
+        USERNAME: ${{ github.actor }}
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}

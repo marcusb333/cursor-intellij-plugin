@@ -184,7 +184,7 @@ Examples:
   $0 check                    # Check prerequisites and API key
   $0 clean                    # Clean build artifacts
   $0 test                     # Run all tests
-  $0 test io.threethirtythree.**       # Run tests matching pattern
+  $0 test io.threethirtythree.**      # Run tests matching pattern (recursively)
   $0 build                    # Build the plugin
   $0 dist                     # Create plugin distribution
   $0 run                      # Run plugin in development IDE

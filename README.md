@@ -170,7 +170,9 @@ The project includes several GitHub Actions workflows:
 - **Version Bump Workflow** - Automated version management and PR creation
 - **Comprehensive Release Workflow** - Full release pipeline with multi-platform building
 - **Marketplace Publishing Workflow** - JetBrains Marketplace publishing
-- **Build and Test Workflow** - Continuous integration
+- **CI Workflow** - Continuous integration with multi-platform testing
+- **Auto-Fill PR Description Workflow** - AI-powered PR template population (DISABLED)
+- **Gradle Package Workflow** - Build and package workflow for release branches
 
 See [RELEASE_WORKFLOWS.md](RELEASE_WORKFLOWS.md) for detailed documentation.
 
@@ -203,7 +205,13 @@ src/main/kotlin/com/cursor/plugin/
 .github/
 ├── pull_request_template.md           # Streamlined PR template
 └── workflows/
-    └── auto-fill-pr-description.yml   # AI-powered PR template auto-fill
+    ├── auto-fill-pr-description.yml.disabled   # AI-powered PR template auto-fill (DISABLED)
+    ├── ci.yml                         # Continuous integration
+    ├── gradle-publish.yml             # Build and package workflow
+    ├── publish-marketplace.yml        # JetBrains Marketplace publishing
+    ├── release-comprehensive.yml      # Full release pipeline
+    ├── release.yml                    # Legacy simple release
+    └── version-bump.yml               # Automated version management
 ```
 
 ### Building and Testing
@@ -369,13 +377,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🔄 **Resource Management**: Class-level coroutine scope with proper cleanup and disposal
 - 📝 **GitHub Automation**: Streamlined PR template with AI-powered auto-fill workflow
 - 🗑️ **Code Cleanup**: Removed deprecated GeneratePRDescriptionAction
-- 🤖 **AI-Powered PRs**: GitHub Actions workflow intelligently populates PR templates using OpenAI
+- 🤖 **AI-Powered PRs**: GitHub Actions workflow intelligently populates PR templates using Cursor AI
 - 🔄 **Template Intelligence**: Workflow analyzes code changes, commit messages, and diffs to generate contextual PR descriptions
 
 ### Version 0.0.4
 
 - ✅ **Build System Fixed**: Resolved Kotlin compilation errors and dependency conflicts
-- 🔧 **HTTP Client Migration**: Initial migration from OpenAI client library
+- 🔧 **HTTP Client Migration**: Initial migration from external client library to native HTTP client
 - ⚡ **Enhanced Compatibility**: GenerateCodeAction and ExplainCodeAction working
 - 📈 **Improved Error Handling**: Better parameter validation and error messages
 - 📦 **Full Build Pipeline**: Complete build, test, and distribution process

@@ -41,7 +41,7 @@
         <li>📈 Improved error handling and interface design</li>
         <li>🧪 All tests passing with comprehensive coverage</li>
         <li>🎯 CompletionsChatAsyncService now uses Dispatchers.Main</li>
-        <li>🔗 Direct OpenAI API integration with proper authentication</li>
+        <li>🔗 Direct Cursor API integration with proper authentication</li>
         <li>🔄 Class-level coroutine scope with proper lifecycle management</li>
         <li>🧹 Resource cleanup and disposal mechanisms</li>
         <li>📝 Streamlined GitHub PR template with AI auto-fill workflow</li>
@@ -58,7 +58,7 @@
         <li>📈 Improved error handling and interface design</li>
         <li>🧪 All tests passing with comprehensive coverage</li>
         <li>🎯 CompletionsChatAsyncService now uses Dispatchers.Main</li>
-        <li>🔗 Direct OpenAI API integration with proper authentication</li>
+        <li>🔗 Direct Cursor API integration with proper authentication</li>
         <li>🔄 Class-level coroutine scope with proper lifecycle management</li>
         <li>🧹 Resource cleanup and disposal mechanisms</li>
         <li>📝 Streamlined GitHub PR template with AI auto-fill workflow</li>
@@ -68,7 +68,7 @@
     <h3>Version 0.0.4</h3>
     <ul>
         <li>Initial coroutine-based implementation</li>
-        <li>OpenAI API integration</li>
+        <li>Cursor API integration</li>
         <li>Basic plugin functionality</li>
     </ul>
     ]]></change-notes>
