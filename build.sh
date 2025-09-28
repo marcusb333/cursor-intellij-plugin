@@ -41,8 +41,9 @@ check_prerequisites() {
     # Check Java version (Gradle itself needs a JRE; toolchains will provision JDKs for compilation/tests)
     if command -v java &> /dev/null; then
         JAVA_VER_STR=$(java -version 2>&1 | head -n 1)
-        JAVA_VERSION=$(echo "$JAVA_VER_STR" | awk -F '"' '{print $2}' | cut -d'.' -f1)
-        if [[ -z "${JAVA_VERSION:-}" ]]; then
+        # Extract major version number robustly (handles quoted/unquoted, dot or plus separated, etc.)
+        JAVA_VERSION=$(echo "$JAVA_VER_STR" | sed -E 's/.*version "?([0-9]+(\.[0-9]+)*)"? .*/\1/' | cut -d'.' -f1)
+        if [[ -z "${JAVA_VERSION:-}" ]] || ! [[ "$JAVA_VERSION" =~ ^[0-9]+$ ]]; then
             print_warning "Unable to parse Java version from: $JAVA_VER_STR"
         elif [ "$JAVA_VERSION" -ge 21 ]; then
             print_success "Java runtime detected: $JAVA_VER_STR"
@@ -156,7 +157,7 @@ check_api_key() {
     if [ -n "${CURSOR_API_KEY:-}" ]; then
         print_success "CURSOR_API_KEY environment variable is set"
     else
-        echo -e "${YELLOW}[WARNING]${NC} CURSOR_API_KEY environment variable is not set. Please set it before running the build."
+        print_warning "CURSOR_API_KEY environment variable is not set. Please set it before running the build."
     fi
 }
 
@@ -179,10 +180,15 @@ Commands:
   help                  Show this help message
 
 Examples:
-  $0 all
-  $0 test
-  $0 test com.cursor.*
-  $0 run
+  $0 check                    # Check prerequisites and API key
+  $0 clean                    # Clean build artifacts
+  $0 test                     # Run all tests
+  $0 test io.threethirtythree.**       # Run tests matching pattern
+  $0 build                    # Build the plugin
+  $0 dist                     # Create plugin distribution
+  $0 run                      # Run plugin in development IDE
+  $0 verify                   # Verify plugin structure
+  $0 all                      # Complete build pipeline (clean, test, build, dist)
 EOF
 }
 
