@@ -170,7 +170,7 @@ public class CheckApiKey {
 EOF
         javac "$TMP_JAVA_FILE" 2>/dev/null
         TMP_CLASS_DIR=$(dirname "$TMP_JAVA_FILE")
-        PROP_VALUE=$(java -Dcursor.api.key=test -cp "$TMP_CLASS_DIR" CheckApiKey 2>/dev/null | grep -v '^$' || true)
+        PROP_VALUE=$(java -cp "$TMP_CLASS_DIR" CheckApiKey 2>/dev/null | grep -v '^$' || true)
         rm -f "$TMP_JAVA_FILE" "$TMP_CLASS_DIR/CheckApiKey.class"
         if [ -n "$PROP_VALUE" ]; then
             print_success "cursor.api.key system property detected"
