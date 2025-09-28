@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_VERSION: '8.10.2'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [IC, IU]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v5
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: ${{ env.GRADLE_VERSION }}
+
+    - name: Run tests
+      run: ./gradlew test --stacktrace --no-daemon --continue
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+    - name: Build plugin
+      run: ./gradlew build --stacktrace --no-daemon
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.platform }}
+        path: build/reports/tests/test/
+        retention-days: 30
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        platform: [IC, IU]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v5
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: ${{ env.GRADLE_VERSION }}
+
+    - name: Build plugin
+      run: ./gradlew build --stacktrace --no-daemon
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+    - name: Create distribution
+      run: ./gradlew buildPlugin --stacktrace --no-daemon
+      env:
+        ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cursor-intellij-plugin-${{ matrix.platform }}-${{ github.sha }}
+        path: |
+          build/libs/*.jar
+          build/distributions/*.zip
+        retention-days: 30

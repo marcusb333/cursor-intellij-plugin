@@ -2,6 +2,7 @@ package io.threethirtythree.plugin.ui
 
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.Gray
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -74,6 +75,8 @@ class CursorChatPanel private constructor(
     private val project: Project,
 ) : JPanel() {
     companion object {
+        private val LOG = Logger.getInstance(CursorChatPanel::class.java)
+        
         /**
          * Creates a new instance of CursorChatPanel for the given project.
          *
@@ -245,6 +248,19 @@ class CursorChatPanel private constructor(
      * This prevents memory leaks and ensures proper resource cleanup.
      */
     fun cleanup() {
-        coroutineScope.cancel()
+        try {
+            coroutineScope.cancel()
+        } catch (e: Exception) {
+            // Log but don't throw - cleanup should be safe
+            LOG.warn("Error during CursorChatPanel cleanup", e)
+        }
+    }
+    
+    /**
+     * Override removeNotify to ensure cleanup when component is removed from UI
+     */
+    override fun removeNotify() {
+        super.removeNotify()
+        cleanup()
     }
 }

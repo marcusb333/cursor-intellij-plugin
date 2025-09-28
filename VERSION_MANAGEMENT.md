@@ -15,10 +15,30 @@ This project uses a centralized version management approach where `src/main/reso
 
 When you run `./sync-version.sh`, the following files are automatically updated:
 
-- `build.gradle` - Gradle build version
+- `build.gradle.kts` - Gradle build version
 - `build.sh` - Build script artifact references
 - `PROJECT_SUMMARY.md` - Documentation artifact paths
 - `README.md` - Changelog current version
+
+## Automated Version Management
+
+The project includes GitHub Actions workflows for automated version management:
+
+### Version Bump Workflow
+- **Trigger**: Push to main/develop branches or manual dispatch
+- **Features**: 
+  - Automatic detection of changes requiring version bump
+  - Manual version bump with type selection (major, minor, patch)
+  - Pull request creation for review
+  - Version synchronization across all files
+
+### Release Workflow
+- **Trigger**: Push tags (`v*`) or manual dispatch
+- **Features**:
+  - Version validation across all files
+  - Automatic changelog generation
+  - Comprehensive release notes
+  - Artifact building and publishing
 
 ## How to Update the Version
 

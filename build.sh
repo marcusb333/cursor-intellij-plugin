@@ -158,6 +158,7 @@ check_api_key() {
         print_success "CURSOR_API_KEY environment variable is set"
     else
         print_warning "CURSOR_API_KEY environment variable is not set. Please set it before running the build."
+        print_warning "Get your Cursor API key from: https://cursor.com"
     fi
 }
 

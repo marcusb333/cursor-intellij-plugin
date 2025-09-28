@@ -26,7 +26,7 @@ class CursorSettingsState : PersistentStateComponent<CursorSettingsState> {
     var lastConnectionTestMessage: String = ""
     
     companion object {
-        const val DEFAULT_API_ENDPOINT = "https://api.openai.com/v1"
+        const val DEFAULT_API_ENDPOINT = "https://api.cursor.com/v1"
         const val DEFAULT_TIMEOUT_SECONDS = 30
         private const val API_KEY_SERVICE_NAME = "CursorPlugin"
         private const val API_KEY_USERNAME = "apiKey"
