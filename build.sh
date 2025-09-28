@@ -153,7 +153,7 @@ verify_plugin() {
 
 # Function to check for API key
 check_api_key() {
-    if [ -n "$CURSOR_API_KEY" ]; then
+    if [ -n "${CURSOR_API_KEY:-}" ]; then
         print_success "CURSOR_API_KEY environment variable is set"
     else
         # Check if Java system property is set by printing it
