@@ -154,9 +154,13 @@ verify_plugin() {
 # Function to check for API key
 check_api_key() {
     if [ -n "$CURSOR_API_KEY" ]; then
-            print_success "CURSOR_API_KEY environment variable is set"
-      elif [ -n "$(java -Dcursor.api.key=test -version 2>&1 | grep 'cursor.api.key')" ]; then
-          print_success "cursor.api.key system property detected"
+        print_success "CURSOR_API_KEY environment variable is set"
+    else
+        # Check if Java system property is set by printing it
+        PROP_VALUE=$(java -Dcursor.api.key=test -cp . -e 'System.out.println(System.getProperty("cursor.api.key"))' 2>/dev/null | grep -v '^$' || true)
+        if [ -n "$PROP_VALUE" ]; then
+            print_success "cursor.api.key system property detected"
+        fi
     fi
 }
 
