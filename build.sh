@@ -226,10 +226,30 @@ check_api_key() {
 show_build_info() {
     print_status "Build Information:"
     
-    # Extract version from plugin.xml
-    PLUGIN_VERSION=$(grep -o '<version>[^<]*</version>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g' || true)
-    PLUGIN_ID=$(grep -o '<id>[^<]*</id>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g' || true)
-    PLUGIN_NAME=$(grep -o '<name>[^<]*</name>' src/main/resources/META-INF/plugin.xml | sed 's/<[^>]*>//g' || true)
+    # Check for xmllint
+    if ! command -v xmllint &> /dev/null; then
+        print_warning "xmllint is not installed. Please install libxml2-utils to enable robust XML parsing."
+        PLUGIN_VERSION="Unknown"
+        PLUGIN_ID="Unknown"
+        PLUGIN_NAME="Unknown"
+    else
+        PLUGIN_VERSION=$(xmllint --xpath 'string(//version)' src/main/resources/META-INF/plugin.xml 2>/dev/null || echo "")
+        PLUGIN_ID=$(xmllint --xpath 'string(//id)' src/main/resources/META-INF/plugin.xml 2>/dev/null || echo "")
+        PLUGIN_NAME=$(xmllint --xpath 'string(//name)' src/main/resources/META-INF/plugin.xml 2>/dev/null || echo "")
+        # Error handling for empty values
+        if [ -z "$PLUGIN_VERSION" ]; then
+            print_warning "Could not extract <version> from plugin.xml"
+            PLUGIN_VERSION="Unknown"
+        fi
+        if [ -z "$PLUGIN_ID" ]; then
+            print_warning "Could not extract <id> from plugin.xml"
+            PLUGIN_ID="Unknown"
+        fi
+        if [ -z "$PLUGIN_NAME" ]; then
+            print_warning "Could not extract <name> from plugin.xml"
+            PLUGIN_NAME="Unknown"
+        fi
+    fi
     
     echo "  Plugin ID: ${PLUGIN_ID:-Unknown}"
     echo "  Plugin Name: ${PLUGIN_NAME:-Unknown}"
