@@ -42,7 +42,7 @@ check_prerequisites() {
     if command -v java &> /dev/null; then
         JAVA_VER_STR=$(java -version 2>&1 | head -n 1)
         # Extract major version number robustly (handles quoted/unquoted, dot or plus separated, etc.)
-        JAVA_VERSION=$(echo "$JAVA_VER_STR" | grep -oE '[0-9]+' | head -n 1)
+        JAVA_VERSION=$(echo "$JAVA_VER_STR" | sed -E 's/.*version "?([0-9]+(\.[0-9]+)*)"? .*/\1/' | cut -d'.' -f1)
         if [[ -z "${JAVA_VERSION:-}" ]] || ! [[ "$JAVA_VERSION" =~ ^[0-9]+$ ]]; then
             print_warning "Unable to parse Java version from: $JAVA_VER_STR"
         elif [ "$JAVA_VERSION" -ge 21 ]; then
