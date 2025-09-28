@@ -18,7 +18,7 @@ dependencies {
     intellijPlatform {
         // Use a stable version of IntelliJ Platform
         val platformVersion = providers.gradleProperty("platformVersion").getOrElse("2024.2")
-        intellijIdeaUltimate(platformVersion)
+        intellijIdeaCommunity(platformVersion)
         
         // Bundled plugins required for testing
         bundledPlugin("com.intellij.java")
@@ -87,5 +87,40 @@ intellijPlatform {
     publishing {
         token.set(System.getenv("JETBRAINS_MARKETPLACE_TOKEN") ?: "")
         channels.set(listOf("default"))
+    }
+}
+
+// IntelliJ Plugin specific tasks
+tasks {
+    patchPluginXml {
+        sinceBuild.set("252")
+        untilBuild.set("999.*")
+        changeNotes.set("""
+            <h3>Version 0.6.0</h3>
+            <ul>
+                <li>🚀 Compatible with both IntelliJ IDEA Community (IC) and Ultimate (IU) editions</li>
+                <li>🔧 Fixed dependency conflicts and build system issues</li>
+                <li>⚡ Migrated to Java HttpClient for reliable HTTP communication</li>
+                <li>📈 Improved error handling and interface design</li>
+                <li>🧪 All tests passing with comprehensive coverage</li>
+                <li>🎯 CompletionsChatAsyncService now uses Dispatchers.Main</li>
+                <li>🔗 Direct Cursor API integration with proper authentication</li>
+                <li>🔄 Class-level coroutine scope with proper lifecycle management</li>
+                <li>🧹 Resource cleanup and disposal mechanisms</li>
+                <li>📝 Streamlined GitHub PR template with AI auto-fill workflow</li>
+                <li>🗑️ Removed deprecated PR description generator action</li>
+                <li>🔄 GitHub Actions workflow for intelligent PR template population</li>
+                <li>🔧 Improved logging framework integration</li>
+                <li>🐛 Fixed version consistency issues</li>
+            </ul>
+        """.trimIndent())
+    }
+    
+    verifyPlugin {
+        // Plugin verification settings
+    }
+    
+    runIde {
+        jvmArgs("-Xmx2048m")
     }
 }
