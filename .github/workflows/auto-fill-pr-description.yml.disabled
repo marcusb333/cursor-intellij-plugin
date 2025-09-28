@@ -139,7 +139,7 @@ EOF
             response=$(curl -s -X POST "https://api.cursor.sh/v1/ai/chat" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $CURSOR_API_KEY" \
-              -d "{\n                \"prompt\": { $(echo \"$prompt\" | jq -R -s .),\n      add          \"system\": "\"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"\n              }" }
+              -d "$(jq -n --arg prompt "$prompt" --arg system "You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON." '{prompt: $prompt, system: $system}')" 
 
             ai_content=$(echo "$response" | jq -r '.content')
 
