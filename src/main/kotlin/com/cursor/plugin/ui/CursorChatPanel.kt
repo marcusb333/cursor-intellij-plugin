@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.ui
 
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -90,10 +90,10 @@ class CursorChatPanel private constructor(
 
     // Coroutine scope for managing async operations
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val aiService: CompletionsChatAsyncService
+    private val aiService: com.cursor.plugin.service.CompletionsChatAsyncService
 
     init {
-        this.aiService = CompletionsChatAsyncService.getInstance(project)
+        this.aiService = com.cursor.plugin.service.CompletionsChatAsyncService.getInstance(project)
 
         layout = BorderLayout()
         border = JBUI.Borders.empty(10)
@@ -223,7 +223,7 @@ class CursorChatPanel private constructor(
                 message = message,
                 context = context,
                 action = dummyAction,
-                callback = object : CursorAIResponseCallback {
+                callback = object : com.cursor.plugin.core.CursorAIResponseCallback {
                     override fun onSuccess(response: String) {
                         SwingUtilities.invokeLater {
                             appendToChat("$response\n\n")

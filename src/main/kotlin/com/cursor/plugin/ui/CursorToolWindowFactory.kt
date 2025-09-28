@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.ui
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow

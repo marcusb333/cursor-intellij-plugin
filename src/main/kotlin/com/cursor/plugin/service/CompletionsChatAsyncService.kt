@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.service
 
 import com.cursor.plugin.settings.CursorSettingsState
 import com.google.gson.Gson
@@ -20,7 +20,7 @@ import java.time.Duration
 @Service(Service.Level.PROJECT)
 class CompletionsChatAsyncService(
     val project: Project,
-) : ChatServiceInterface {
+) : com.cursor.plugin.core.ChatServiceInterface {
     // Class-level coroutine scope for managing all async operations
     private val serviceJob = SupervisorJob()
     internal val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -55,11 +55,11 @@ class CompletionsChatAsyncService(
         if (!settingsApiKey.isNullOrEmpty()) {
             return settingsApiKey.trim()
         }
-        
-        // 2. Fall back to environment variable OPENAI_API_KEY
+
+        // 2. Fall back to environment variable CURSOR_API_KEY
         var apiKey: String? = null
         try {
-            apiKey = System.getenv("OPENAI_API_KEY")
+            apiKey = System.getenv("CURSOR_API_KEY")
             if (!apiKey.isNullOrEmpty()) {
                 return apiKey.trim()
             }
@@ -73,7 +73,7 @@ class CompletionsChatAsyncService(
         message: String?,
         context: String,
         action: AnAction,
-        callback: CursorAIResponseCallback,
+        callback: com.cursor.plugin.core.CursorAIResponseCallback,
     ) {
         if (message.isNullOrBlank()) return
 
@@ -83,7 +83,7 @@ class CompletionsChatAsyncService(
             val errorMessage =
                 "OpenAI API key not found. Please configure it in:\n" +
                     "1. Plugin Settings: File → Settings → Cursor AI\n" +
-                    "2. Or set environment variable: export OPENAI_API_KEY=your_key_here\n" +
+                    "2. Or set environment variable: export CURSOR_API_KEY=your_key_here\n" +
                     "For more details, see the plugin documentation."
             callback.onError(errorMessage)
             return
@@ -113,7 +113,7 @@ class CompletionsChatAsyncService(
                 val settings = CursorSettingsState.instance
                 val apiEndpoint = settings.apiEndpoint
                 val timeout = settings.timeoutSeconds.toLong()
-                
+
                 val request =
                     HttpRequest
                         .newBuilder()

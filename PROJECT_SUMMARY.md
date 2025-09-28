@@ -130,7 +130,7 @@ cursor-intellij-plugin/
 ### API Key Configuration
 The plugin supports multiple methods for API key configuration:
 
-1. **Environment Variable**: `OPENAI_API_KEY`
+1. **Environment Variable**: `CURSOR_API_KEY`
 2. **System Property**: `openai.api.key`
 3. **Future**: Settings panel (planned feature)
 

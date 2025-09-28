@@ -89,12 +89,12 @@ jobs:
       - name: Generate AI-powered PR description
         id: ai_description
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
           generate_ai_pr_description() {
             set -e
-            if [ -z "$OPENAI_API_KEY" ]; then
-              echo "Error: OPENAI_API_KEY secret not set"
+            if [ -z "$CURSOR_API_KEY" ]; then
+              echo "Error: CURSOR_API_KEY secret not set"
               exit 1
             fi
 
@@ -107,7 +107,7 @@ jobs:
 
             response=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
               -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Authorization: Bearer $CURSOR_API_KEY" \
               -d "{\n                \"model\": \"gpt-4\",\n                \"messages\": [\n                  {\"role\": \"system\", \"content\": \"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"},\n                  {\"role\": \"user\", \"content\": $(echo \"$prompt\" | jq -R -s .)}\n                ],\n                \"max_tokens\": 1000,\n                \"temperature\": 0.3\n              }")
 
             ai_content=$(echo "$response" | jq -r '.choices[0].message.content')

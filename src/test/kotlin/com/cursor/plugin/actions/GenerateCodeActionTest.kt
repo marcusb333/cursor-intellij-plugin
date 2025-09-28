@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.actions
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -26,6 +26,7 @@ import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import com.cursor.plugin.service.CompletionsChatAsyncService
 
 /**
  * Test class for [GenerateCodeAction].

@@ -1,7 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.2.0"
     id("org.jetbrains.intellij.platform") version "2.9.0"
-    application
 }
 
 group = "com.cursor"
@@ -17,26 +16,9 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        // Support both IC (Community) and IU (Ultimate) builds
-        val platformType = providers.gradleProperty("platformType").getOrElse("IU")
-        val platformVersion = providers.gradleProperty("platformVersion").getOrElse("2025.2")
-
-        when (platformType) {
-            "IC" -> {
-                // For versions before 2025.3, use intellijIdeaCommunity
-                if (platformVersion < "2025.3") {
-                    intellijIdeaCommunity(platformVersion)
-                } else {
-                    // Starting with 2025.3, IC is not available as a target
-                    error("IntelliJ IDEA Community (IC) is not available for version $platformVersion and later. Use IU instead.")
-                }
-            }
-            "IU" -> {
-                // For newer versions, still use intellijIdeaUltimate
-                intellijIdeaUltimate(platformVersion)
-            }
-            else -> error("Unknown platform type: $platformType. Use IC for Community or IU for Ultimate.")
-        }
+        // Use a stable version of IntelliJ Platform
+        val platformVersion = providers.gradleProperty("platformVersion").getOrElse("2024.2")
+        intellijIdeaUltimate(platformVersion)
         
         // Bundled plugins required for testing
         bundledPlugin("com.intellij.java")
@@ -44,6 +26,10 @@ dependencies {
 
     // JSON processing
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // HTTP client
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
     // implementation("com.azure:azure-identity:1.17.0")
 
     // Testing dependencies - updated for compatibility with IntelliJ 2025.2
@@ -79,9 +65,6 @@ configurations.runtimeClasspath {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
 }
 
-application {
-    mainClass = "com.cursor.plugin.CursorPluginService"
-}
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -95,40 +78,6 @@ tasks {
         useJUnitPlatform()
         testLogging {
             events("passed", "skipped", "failed")
-        }
-    }
-}
-
-// Publishing configuration for JetBrains Marketplace
-publishing {
-    publications {
-        create<MavenPublication>("plugin") {
-            from(components["java"])
-            
-            groupId = project.group.toString()
-            artifactId = "cursor-intellij-plugin"
-            version = project.version.toString()
-            
-            pom {
-                name.set("Cursor AI IntelliJ Plugin")
-                description.set("Integrate Cursor's powerful AI chatbot directly into IntelliJ IDEA")
-                url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "your-username/cursor-intellij-plugin"}")
-                
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                
-                developers {
-                    developer {
-                        id.set("cursor")
-                        name.set("Cursor Team")
-                        email.set("support@cursor.com")
-                    }
-                }
-            }
         }
     }
 }

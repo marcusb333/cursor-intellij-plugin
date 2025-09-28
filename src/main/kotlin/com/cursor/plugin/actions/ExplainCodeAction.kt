@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -65,7 +65,7 @@ class ExplainCodeAction : AnAction() {
             return
         }
 
-        val aiService = CompletionsChatAsyncService.getInstance(project)
+        val aiService = com.cursor.plugin.service.CompletionsChatAsyncService.getInstance(project)
         val prompt = "Please explain this code:\n\n$selectedText"
         val context = "Code explanation request"
 
@@ -79,7 +79,7 @@ class ExplainCodeAction : AnAction() {
                             context,
                             action = this@ExplainCodeAction,
                             callback =
-                                object : CursorAIResponseCallback {
+                                object : com.cursor.plugin.core.CursorAIResponseCallback {
                                     override fun onSuccess(response: String) {
                                         SwingUtilities.invokeLater {
                                             Messages.showMessageDialog(
