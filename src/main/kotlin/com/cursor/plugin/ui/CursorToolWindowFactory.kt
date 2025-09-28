@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.ui
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull
 class CursorToolWindowFactory : ToolWindowFactory {
     
     override fun createToolWindowContent(@NotNull project: Project, @NotNull toolWindow: ToolWindow) {
-        val chatPanel = CursorChatPanel.create(project)
+        val chatPanel = com.cursor.plugin.ui.CursorChatPanel.create(project)
         val content = ContentFactory.getInstance().createContent(chatPanel, "", false)
         toolWindow.contentManager.addContent(content)
     }

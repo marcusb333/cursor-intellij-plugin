@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.core
 
 import com.intellij.openapi.actionSystem.AnAction
 

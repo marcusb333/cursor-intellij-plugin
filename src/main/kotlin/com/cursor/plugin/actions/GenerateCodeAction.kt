@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -73,7 +73,7 @@ class GenerateCodeAction : AnAction() {
             )
 
         if (!prompt.isNullOrBlank()) {
-            val aiService = CompletionsChatAsyncService.getInstance(project)
+            val aiService = com.cursor.plugin.service.CompletionsChatAsyncService.getInstance(project)
             val context = "Generate code for: $prompt"
 
             // Use IntelliJ's background task to call the service
@@ -84,7 +84,7 @@ class GenerateCodeAction : AnAction() {
                             prompt,
                             context,
                             this@GenerateCodeAction,
-                            object : CursorAIResponseCallback {
+                            object : com.cursor.plugin.core.CursorAIResponseCallback {
                                 override fun onSuccess(response: String) {
                                     SwingUtilities.invokeLater {
                                         val result =

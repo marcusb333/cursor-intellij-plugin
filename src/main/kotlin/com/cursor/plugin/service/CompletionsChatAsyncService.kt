@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.service
 
 import com.cursor.plugin.settings.CursorSettingsState
 import com.google.gson.Gson
@@ -20,7 +20,7 @@ import java.time.Duration
 @Service(Service.Level.PROJECT)
 class CompletionsChatAsyncService(
     val project: Project,
-) : ChatServiceInterface {
+) : com.cursor.plugin.core.ChatServiceInterface {
     // Class-level coroutine scope for managing all async operations
     private val serviceJob = SupervisorJob()
     internal val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -73,7 +73,7 @@ class CompletionsChatAsyncService(
         message: String?,
         context: String,
         action: AnAction,
-        callback: CursorAIResponseCallback,
+        callback: com.cursor.plugin.core.CursorAIResponseCallback,
     ) {
         if (message.isNullOrBlank()) return
 

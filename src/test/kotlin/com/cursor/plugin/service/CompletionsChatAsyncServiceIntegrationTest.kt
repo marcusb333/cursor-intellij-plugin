@@ -1,9 +1,10 @@
-package com.cursor.plugin
+package com.cursor.plugin.service
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.project.Project
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import com.cursor.plugin.core.CursorAIResponseCallback
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test

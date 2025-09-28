@@ -1,4 +1,4 @@
-package com.cursor.plugin
+package com.cursor.plugin.core
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
@@ -32,6 +32,6 @@ class CursorPlugin : StartupActivity {
         @NotNull project: Project,
     ) {
         // Initialize CompletionsChatAsyncService
-        CompletionsChatAsyncService.getInstance(project)
+        com.cursor.plugin.service.CompletionsChatAsyncService.getInstance(project)
     }
 }
