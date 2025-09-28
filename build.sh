@@ -156,25 +156,7 @@ check_api_key() {
     if [ -n "${CURSOR_API_KEY:-}" ]; then
         print_success "CURSOR_API_KEY environment variable is set"
     else
-        # Check if Java system property is set by printing it
-        TMP_JAVA_FILE=$(mktemp /tmp/CheckApiKeyXXXX.java)
-        cat > "$TMP_JAVA_FILE" <<EOF
-public class CheckApiKey {
-    public static void main(String[] args) {
-        String value = System.getProperty("cursor.api.key");
-        if (value != null && !value.isEmpty()) {
-            System.out.println(value);
-        }
-    }
-}
-EOF
-        javac "$TMP_JAVA_FILE" 2>/dev/null
-        TMP_CLASS_DIR=$(dirname "$TMP_JAVA_FILE")
-        PROP_VALUE=$(java -cp "$TMP_CLASS_DIR" CheckApiKey 2>/dev/null | grep -v '^$' || true)
-        rm -f "$TMP_JAVA_FILE" "$TMP_CLASS_DIR/CheckApiKey.class"
-        if [ -n "$PROP_VALUE" ]; then
-            print_success "cursor.api.key system property detected"
-        fi
+        echo -e "${YELLOW}[WARNING]${NC} CURSOR_API_KEY environment variable is not set. Please set it before running the build."
     fi
 }
 
