@@ -11,6 +11,8 @@ The release system consists of several interconnected workflows:
 3. **Simple Release Workflow** (`release.yml`) - Legacy simple release
 4. **Marketplace Publishing Workflow** (`publish-marketplace.yml`) - JetBrains Marketplace publishing
 5. **Gradle Package Workflow** (`gradle-publish.yml`) - Build and package workflow
+6. **Auto-Fill PR Description Workflow** (`auto-fill-pr-description.yml.disabled`) - AI-powered PR template population (DISABLED)
+7. **CI Workflow** (`ci.yml`) - Continuous integration and testing
 
 ## Workflow Details
 
@@ -89,6 +91,75 @@ git push origin v0.0.6
 # Choose dry run or actual publishing
 ```
 
+### 4. Auto-Fill PR Description Workflow (`auto-fill-pr-description.yml.disabled`) - DISABLED
+
+**Status:** DISABLED - This workflow has been disabled and will not run automatically.
+
+**Triggers:**
+- Pull request opened or synchronized
+- Manual dispatch with PR number input
+
+**Features:**
+- AI-powered PR description generation using Cursor API
+- Automatic analysis of code changes, commits, and diffs
+- Template placeholder replacement
+- Context-aware content generation for IntelliJ plugin development
+
+**Usage:**
+```bash
+# WORKFLOW IS DISABLED - No automatic execution
+# To re-enable: rename auto-fill-pr-description.yml.disabled to auto-fill-pr-description.yml
+
+# Manual (via GitHub Actions UI) - Only works if re-enabled
+# Go to Actions → Auto-Fill PR Description → Run workflow
+# Enter PR number to update
+```
+
+**Required Secrets:**
+- `CURSOR_API_KEY` - Your Cursor API key for AI content generation
+
+### 5. CI Workflow (`ci.yml`)
+
+**Triggers:**
+- Push to `main` or `develop` branches
+- Pull requests to `main` branch
+
+**Features:**
+- Multi-platform testing (IC and IU)
+- Comprehensive test execution
+- Build verification
+- Artifact upload for review
+
+**Usage:**
+```bash
+# Automatic (triggered by code changes)
+git push origin main
+# or create a pull request
+
+# The workflow automatically runs tests and builds
+```
+
+### 6. Gradle Package Workflow (`gradle-publish.yml`)
+
+**Triggers:**
+- Push to `release/v*` branches
+- Pull requests to `main` branch
+
+**Features:**
+- Multi-platform building (IC and IU)
+- GitHub Packages publishing
+- Build artifact management
+- Comprehensive testing before packaging
+
+**Usage:**
+```bash
+# Automatic (triggered by release branch pushes)
+git push origin release/v0.0.6
+
+# Manual (via pull request to main)
+# Create PR to main branch
+```
+
 ## Required Secrets
 
 To use the full functionality, configure these repository secrets:
@@ -101,6 +172,9 @@ To use the full functionality, configure these repository secrets:
 ### JetBrains Marketplace Secrets
 - `JETBRAINS_MARKETPLACE_TOKEN` - Your JetBrains Marketplace API token
 - `JETBRAINS_MARKETPLACE_PLUGIN_ID` - Your plugin ID in the marketplace
+
+### AI Integration Secrets
+- `CURSOR_API_KEY` - Your Cursor API key for AI-powered PR description generation
 
 ## Setup Instructions
 
@@ -148,15 +222,80 @@ To use the full functionality, configure these repository secrets:
 
 ```mermaid
 graph TD
-    A[Code Changes] --> B[Version Bump Workflow]
-    B --> C[Version Bump PR]
-    C --> D[Manual Review]
-    D --> E[Merge PR]
-    E --> F[Create Tag]
-    F --> G[Comprehensive Release Workflow]
-    G --> H[GitHub Release]
-    H --> I[Marketplace Publishing Workflow]
-    I --> J[JetBrains Marketplace]
+    A[Code Changes] --> B[CI Workflow]
+    A --> C[Version Bump Workflow]
+    C --> D[Version Bump PR]
+    D --> F[Manual Review]
+    F --> G[Merge PR]
+    G --> H[Create Tag]
+    H --> I[Comprehensive Release Workflow]
+    I --> J[GitHub Release]
+    J --> K[Marketplace Publishing Workflow]
+    K --> L[JetBrains Marketplace]
+    
+    M[Pull Request] --> F
+    N[Release Branch] --> O[Gradle Package Workflow]
+    O --> P[GitHub Packages]
+    
+    E[Auto-Fill PR Description] -.-> F
+    E -.-> |DISABLED| F
+    
+    style E fill:#ffebee,stroke:#f44336,stroke-dasharray: 5 5
+    style I fill:#f3e5f5
+    style K fill:#e8f5e8
+```
+
+## Complete Workflow Overview
+
+The following diagram shows all workflows and their relationships in the Cursor AI IntelliJ Plugin project:
+
+```mermaid
+graph TB
+    subgraph "Development Workflows"
+        A[Code Changes] --> B[CI Workflow]
+        B --> C{Tests Pass?}
+        C -->|Yes| D[Build Success]
+        C -->|No| E[Build Failure]
+    end
+    
+    subgraph "Version Management"
+        F[Version Bump Workflow] --> G[Create Version PR]
+        G --> H[Auto-Fill PR Description]
+        H --> I[Manual Review]
+        I --> J[Merge PR]
+    end
+    
+    subgraph "Release Process"
+        K[Create Release Tag] --> L[Comprehensive Release Workflow]
+        L --> M[Multi-Platform Build]
+        M --> N[Sign Artifacts]
+        N --> O[Generate Release Notes]
+        O --> P[Create GitHub Release]
+    end
+    
+    subgraph "Publishing"
+        Q[GitHub Release] --> R[Marketplace Publishing]
+        R --> S[JetBrains Marketplace]
+        T[Release Branch] --> U[Gradle Package Workflow]
+        U --> V[GitHub Packages]
+    end
+    
+    subgraph "AI Integration (DISABLED)"
+        W[Pull Request Events] -.-> X[Auto-Fill PR Description]
+        X -.-> Y[Cursor API]
+        Y -.-> Z[AI-Generated Content]
+    end
+    
+    A --> F
+    J --> K
+    P --> Q
+    W --> H
+    
+    style B fill:#e3f2fd
+    style H fill:#e1f5fe
+    style L fill:#f3e5f5
+    style R fill:#e8f5e8
+    style X fill:#ffebee,stroke:#f44336,stroke-dasharray: 5 5
 ```
 
 ## Artifact Outputs
@@ -193,6 +332,116 @@ graph TD
    - Ensure Java 21+ is available
    - Check Gradle wrapper permissions
    - Verify all dependencies are available
+
+5. **Auto-Fill PR Description Fails**
+   - Verify `CURSOR_API_KEY` is valid and has proper permissions
+   - Check that the PR contains template placeholders
+   - Ensure the API key has sufficient credits/quota
+   - Check network connectivity to Cursor API
+
+6. **CI Workflow Fails**
+   - Verify Java 21+ is available in the runner
+   - Check that all tests pass locally
+   - Ensure Gradle wrapper is executable
+   - Verify platform-specific builds work correctly
+
+### Detailed Troubleshooting Guide
+
+#### Workflow-Specific Issues
+
+**Version Bump Workflow Issues:**
+- **"No version bump needed"**: Check if source files actually changed
+- **"Version synchronization failed"**: Run `./sync-version.sh` locally first
+- **"PR creation failed"**: Verify GitHub token has proper permissions
+
+**Comprehensive Release Workflow Issues:**
+- **"Version consistency validation failed"**: Update plugin.xml version manually
+- **"Build artifacts not found"**: Check if build steps completed successfully
+- **"Release creation failed"**: Verify GitHub token has write permissions
+
+**Marketplace Publishing Issues:**
+- **"Marketplace credentials invalid"**: Regenerate token from JetBrains Marketplace
+- **"Plugin verification failed"**: Check plugin.xml for required fields
+- **"Publishing timeout"**: Increase workflow timeout or check marketplace status
+
+**Auto-Fill PR Description Issues:**
+- **"API key not configured"**: Add CURSOR_API_KEY to repository secrets
+- **"No template placeholders found"**: Ensure PR uses the template format
+- **"AI response invalid"**: Check Cursor API key quota and network connectivity
+
+**CI Workflow Issues:**
+- **"Tests failing"**: Run tests locally with `./gradlew test`
+- **"Platform build failed"**: Check platform-specific dependencies
+- **"Artifact upload failed"**: Verify GitHub Actions permissions
+
+#### Environment and Configuration Issues
+
+**Java Version Issues:**
+```bash
+# Check Java version
+java -version
+
+# Should show Java 21 or later
+# If not, install Java 21+ and update JAVA_HOME
+```
+
+**Gradle Issues:**
+```bash
+# Make gradlew executable
+chmod +x ./gradlew
+
+# Check Gradle version
+./gradlew --version
+
+# Clean and rebuild
+./gradlew clean build
+```
+
+**Git Configuration Issues:**
+```bash
+# Configure Git for workflows
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+# Check branch and tag status
+git branch -a
+git tag -l
+```
+
+#### Secret Configuration Issues
+
+**Missing Secrets:**
+1. Go to repository → Settings → Secrets and variables → Actions
+2. Add required secrets:
+   - `CURSOR_API_KEY`
+   - `JETBRAINS_MARKETPLACE_TOKEN`
+   - `JETBRAINS_MARKETPLACE_PLUGIN_ID`
+   - `SIGNING_KEY` (optional)
+   - `SIGNING_KEY_PASSPHRASE` (optional)
+
+**Invalid Secret Format:**
+- **CURSOR_API_KEY**: Should be a valid Cursor API key
+- **JETBRAINS_MARKETPLACE_TOKEN**: Should be a 36-character UUID format
+- **SIGNING_KEY**: Should be a valid GPG private key
+
+#### Network and API Issues
+
+**API Connectivity:**
+```bash
+# Test Cursor API connectivity
+curl -H "Authorization: Bearer $CURSOR_API_KEY" \
+     -H "Content-Type: application/json" \
+     https://api.cursor.com/v1/chat/completions
+
+# Test JetBrains Marketplace API
+curl -H "Authorization: Bearer $JETBRAINS_MARKETPLACE_TOKEN" \
+     https://plugins.jetbrains.com/api/vendor/plugins
+```
+
+**Firewall/Proxy Issues:**
+- Check if corporate firewall blocks GitHub Actions
+- Verify proxy settings if applicable
+- Ensure outbound HTTPS connections are allowed
 
 ### Debug Mode
 
@@ -261,6 +510,13 @@ For issues with the release workflows:
 4. Create GitHub issues for workflow bugs or feature requests
 
 ## Changelog
+
+### Workflow System v2.0 (Current)
+- **AI-Powered PR Management**: Added auto-fill PR description workflow using Cursor API
+- **Enhanced CI Pipeline**: Comprehensive CI workflow with multi-platform testing
+- **Improved Documentation**: Updated workflow documentation with all current workflows
+- **Better Error Handling**: Enhanced troubleshooting guides for all workflows
+- **Streamlined Release Process**: Optimized workflow dependencies and execution order
 
 ### Workflow System v1.0
 - Initial comprehensive release workflow system

@@ -39,6 +39,7 @@ jobs:
         id: pr_data
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
           fetch_pr_details_and_diff() {
             set -e
@@ -103,17 +104,47 @@ jobs:
             commit_messages=$(cat commit_messages.txt)
             diff_content=$(cat diff_content.txt)
 
-            prompt="You are helping to auto-fill a GitHub Pull Request template for an IntelliJ plugin project called 'Cursor AI Assistant'.\n\nPR Title: $title\n\nFiles Changed: $files_summary\n\nCommit Messages: $commit_messages\n\nDiff Preview: $diff_content\n\nPlease provide a JSON response with the following structure:\n{\n  \"brief_description_and_context\": \"1-2 sentence overview of what this PR does and why\",\n  \"summary\": \"Detailed explanation of the changes and their purpose\",\n  \"changes\": \"chore, docs, feat, fix, refactor, style, or test followed by the change\",\n  \"change_brief_descriptions\": \"Brief description of each change type selected\",\n  \"key_changes\": \"Bullet points of the most important technical changes\",\n  \"compatibility_and_risk\": \"Assessment of compatibility impact and risk level (Low/Medium/High)\",\n  \"security_review\": \"Any security considerations or confirmations needed\"\n}\n\nFocus on:\n- IntelliJ plugin development context\n- Kotlin/Java code changes\n- API integrations (especially OpenAI/Cursor AI)\n- Build system changes (Gradle)\n- Testing improvements\n\nKeep responses concise and technical."
+            prompt=$(cat <<'EOF'
+You are helping to auto-fill a GitHub Pull Request template for an IntelliJ plugin project called 'Cursor AI Assistant'.
 
-            response=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+PR Title: $title
+
+Files Changed: $files_summary
+
+Commit Messages: $commit_messages
+
+Diff Preview: $diff_content
+
+Please provide a JSON response with the following structure:
+{
+  "brief_description_and_context": "1-2 sentence overview of what this PR does and why",
+  "summary": "Detailed explanation of the changes and their purpose",
+  "changes": "chore, docs, feat, fix, refactor, style, or test followed by the change",
+  "change_brief_descriptions": "Brief description of each change type selected",
+  "key_changes": "Bullet points of the most important technical changes",
+  "compatibility_and_risk": "Assessment of compatibility impact and risk level (Low/Medium/High)",
+  "security_review": "Any security considerations or confirmations needed"
+}
+
+Focus on:
+- IntelliJ plugin development context
+- Kotlin/Java code changes
+- API integrations (especially Cursor AI)
+- Build system changes (Gradle)
+- Testing improvements
+
+Keep responses concise and technical.
+EOF
+)
+            response=$(curl -s -X POST "https://api.cursor.sh/v1/ai/chat" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $CURSOR_API_KEY" \
-              -d "{\n                \"model\": \"gpt-4\",\n                \"messages\": [\n                  {\"role\": \"system\", \"content\": \"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"},\n                  {\"role\": \"user\", \"content\": $(echo \"$prompt\" | jq -R -s .)}\n                ],\n                \"max_tokens\": 1000,\n                \"temperature\": 0.3\n              }")
+              -d "{\n                \"prompt\": { $(echo \"$prompt\" | jq -R -s .),\n      add          \"system\": "\"You are a technical assistant helping with GitHub PR descriptions. Always respond with valid JSON.\"\n              }" }
 
             ai_content=$(echo "$response" | jq -r '.choices[0].message.content')
 
             if [ "$ai_content" = "null" ] || [ -z "$ai_content" ]; then
-              echo "Error: Failed to get AI response"
+              echo "Error: Failed to get Cursor AI response"
               echo "Response: $response"
               exit 1
             fi

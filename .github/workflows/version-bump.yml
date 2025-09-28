@@ -3,8 +3,7 @@ name: Automated Version Bump
 on:
   push:
     branches:
-      - main
-      - develop
+      - release/v*
   workflow_dispatch:
     inputs:
       bump_type:

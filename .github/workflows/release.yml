@@ -3,7 +3,7 @@ name: Simple Release (Legacy)
 on:
   push:
     tags:
-      - 'v*'
+      - v*
 
 jobs:
   release:
