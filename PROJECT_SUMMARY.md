@@ -8,7 +8,7 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 
 ### Core Components
 
-1. **CompletionsChatAsyncService** - Main service class that handles API communication with Cursor/OpenAI
+1. **CompletionsChatAsyncService** - Main service class that handles API communication with Cursor API
 2. **CursorPlugin** - Primary plugin entry point and lifecycle management
 3. **CursorToolWindowFactory** - Creates and manages the AI chat tool window
 4. **CursorChatPanel** - User interface for the chat functionality
@@ -16,18 +16,19 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 
 ### Technical Stack
 
-- **Platform**: IntelliJ Platform (compatible with all versions)
-- **Language**: Kotlin 1.9.22 (JVM target 21)
-- **Build System**: Gradle with IntelliJ Platform Plugin 2.0.0
+- **Platform**: IntelliJ Platform (compatible with 2025.2+)
+- **Language**: Kotlin 2.2.0 (JVM target 21)
+- **Build System**: Gradle 8.10.2 with IntelliJ Platform Plugin 2.9.0
 - **Dependencies**:
-  - Java HttpClient (built-in HTTP client)
+  - Java HttpClient (built-in HTTP client with lazy initialization)
   - Gson 2.10.1 (JSON processing)
-  - JUnit 5.10.1 + Mockito 5.8.0 + AssertJ 3.25.1 (testing)
+  - JUnit 5.11.0 + Mockito 5.11.0 + AssertJ 3.25.1 (testing)
+  - IntelliJ Platform SDK (2024.2+)
 
 ## Features Implemented
 
 ### Core Functionality
-- ✅ AI service integration with OpenAI API
+- ✅ AI service integration with Cursor API
 - ✅ Chat interface in tool window
 - ✅ Context menu actions for code generation
 - ✅ Context menu actions for code explanation
@@ -42,14 +43,16 @@ The Cursor AI IntelliJ Plugin is a comprehensive integration that brings Cursor'
 - ✅ Keyboard shortcuts support
 
 ### Developer Experience
-- ✅ Comprehensive unit test suite (16 tests, 100% pass rate)
+- ✅ Comprehensive unit test suite (100% pass rate)
 - ✅ Mock server testing for API integration
-- ✅ Error handling for network issues and API errors
-- ✅ Debug logging capabilities
+- ✅ Enhanced error handling with specific exception types
+- ✅ Professional logging framework integration (IntelliJ Logger)
 - ✅ Build script with comprehensive error checking and colored output
 - ✅ Dependency conflict resolution (coroutines and HTTP client)
 - ✅ Class-level coroutine scope with proper lifecycle management
 - ✅ Resource cleanup and disposal mechanisms
+- ✅ GitHub Actions CI/CD pipeline with automated testing
+- ✅ Comprehensive workflow documentation
 
 ## Project Structure
 
@@ -81,7 +84,7 @@ cursor-intellij-plugin/
 ## API Integration
 
 ### Endpoint Configuration
-- **Base URL**: `https://api.openai.com/v1/chat/completions` (Cursor service)
+- **Base URL**: `https://api.cursor.com/v1/chat/completions`
 - **Authentication**: Bearer token authentication (Cursor API key)
 - **Request Format**: JSON with structured parameters
 
@@ -243,7 +246,8 @@ The plugin supports multiple methods for API key configuration:
 ### Installation Methods
 1. Manual installation from built ZIP file
 2. Development IDE via `runIde` task
-3. Future: JetBrains Plugin Repository
+3. JetBrains Marketplace (via automated publishing workflow)
+4. GitHub Releases (via automated release workflow)
 
 ## Maintenance
 

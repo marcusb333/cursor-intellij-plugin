@@ -28,7 +28,7 @@ class ApiConnectionTestService {
             return TestResult(
                 success = false,
                 message = "API key is not configured",
-                errorDetails = "Please enter your OpenAI API key to test the connection."
+                errorDetails = "Please enter your Cursor API key to test the connection."
             )
         }
         
@@ -41,7 +41,7 @@ class ApiConnectionTestService {
                 .writeTimeout(timeoutSeconds.toLong(), TimeUnit.SECONDS)
                 .build()
             
-            // Use a minimal chat completion request to test the API
+            // Use a minimal chat completion request to test the Cursor API
             val requestBody = JsonObject().apply {
                 addProperty("model", "gpt-3.5-turbo")
                 add("messages", gson.toJsonTree(listOf(
@@ -82,21 +82,21 @@ class ApiConnectionTestService {
                     message = "Authentication failed",
                     responseTimeMs = responseTime,
                     errorDetails = "Invalid API key. Please check your API key and try again.\n\n" +
-                            "Make sure you're using a valid OpenAI API key that starts with 'sk-'."
+                            "Make sure you're using a valid Cursor API key."
                 )
                 403 -> TestResult(
                     success = false,
                     message = "Access forbidden",
                     responseTimeMs = responseTime,
                     errorDetails = "Your API key doesn't have access to this endpoint.\n\n" +
-                            "Please check your OpenAI account permissions."
+                            "Please check your Cursor account permissions."
                 )
                 429 -> TestResult(
                     success = false,
                     message = "Rate limit exceeded",
                     responseTimeMs = responseTime,
                     errorDetails = "You've exceeded your API rate limit.\n\n" +
-                            "Please wait a moment and try again, or check your OpenAI usage limits."
+                            "Please wait a moment and try again, or check your Cursor usage limits."
                 )
                 404 -> TestResult(
                     success = false,

@@ -1,5 +1,9 @@
 # Cursor AI IntelliJ Plugin
 
+[![CI](https://github.com/SnarkyB/cursor-intellij-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/SnarkyB/cursor-intellij-plugin/actions/workflows/ci.yml)
+[![Release](https://github.com/SnarkyB/cursor-intellij-plugin/actions/workflows/release-comprehensive.yml/badge.svg)](https://github.com/SnarkyB/cursor-intellij-plugin/actions/workflows/release-comprehensive.yml)
+[![Marketplace](https://github.com/SnarkyB/cursor-intellij-plugin/actions/workflows/publish-marketplace.yml/badge.svg)](https://github.com/SnarkyB/cursor-intellij-plugin/actions/workflows/publish-marketplace.yml)
+
 This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA, providing intelligent code assistance, generation, and explanation capabilities.
 
 ## Features
@@ -15,9 +19,9 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 
 ### Prerequisites
 
-- IntelliJ IDEA (any version - no version restrictions)
+- IntelliJ IDEA Community or Ultimate Edition (2025.2+)
 - Java 21 or later
-- Cursor API key (get one from [Cursor](https://cursor.sh))
+- Cursor API key (get one from [Cursor](https://cursor.com))
 
 ### Building from Source
 
@@ -31,7 +35,7 @@ This plugin integrates Cursor's powerful AI chatbot directly into IntelliJ IDEA,
 2. Set your Cursor API key as an environment variable:
 
    ```bash
-   export CURSOR_API_KEY=your_api_key_here
+   export CURSOR_API_KEY=your_cursor_api_key_here
    ```
 
 3. Build the plugin using the build script (recommended):
@@ -256,9 +260,9 @@ For more detailed testing information, see [TESTING.md](TESTING.md).
 
 ## API Integration
 
-The plugin communicates with OpenAI's API through Cursor's service using the following endpoint:
+The plugin communicates with Cursor's API using the following endpoint:
 
-- **Base URL**: `https://api.openai.com/v1/chat/completions`
+- **Base URL**: `https://api.cursor.com/v1/chat/completions`
 - **Authentication**: Bearer token (Cursor API key)
 - **Request Format**: JSON with model, messages, and parameters
 
@@ -300,8 +304,9 @@ The plugin communicates with OpenAI's API through Cursor's service using the fol
 ### Common Issues
 
 1. **"API key not configured" error**:
-   - Ensure your API key is set as an environment variable or system property
+   - Ensure your Cursor API key is set as an environment variable or system property
    - Verify the API key is valid and has proper permissions
+   - Get your API key from [Cursor](https://cursor.com)
 
 2. **Plugin not loading**:
    - Verify Java 21+ is installed and configured
@@ -360,7 +365,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📈 **Enhanced Error Handling**: Improved error handling and interface design
 - 🧪 **Comprehensive Testing**: All tests passing with full coverage
 - 🎯 **Coroutine Optimization**: CompletionsChatAsyncService uses Dispatchers.Main with proper lifecycle
-- 🔗 **OpenAI Integration**: Direct OpenAI API integration with proper authentication
+- 🔗 **Cursor API Integration**: Direct Cursor API integration with proper authentication
 - 🔄 **Resource Management**: Class-level coroutine scope with proper cleanup and disposal
 - 📝 **GitHub Automation**: Streamlined PR template with AI-powered auto-fill workflow
 - 🗑️ **Code Cleanup**: Removed deprecated GeneratePRDescriptionAction

@@ -129,6 +129,9 @@ jobs:
           # Update plugin.xml
           sed -i "s/<version>$CURRENT_VERSION<\/version>/<version>$NEW_VERSION<\/version>/" src/main/resources/META-INF/plugin.xml
           
+          # Update build.gradle.kts
+          sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" build.gradle.kts
+          
           echo "Updated version from $CURRENT_VERSION to $NEW_VERSION in plugin.xml"
 
       - name: Run version synchronization script

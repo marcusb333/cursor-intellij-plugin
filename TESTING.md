@@ -2,14 +2,14 @@
 
 ## Overview
 
-This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 16 tests achieving 100% pass rate.
+This document describes the testing strategy, test structure, and how to run tests for the Cursor AI IntelliJ Plugin. The project maintains comprehensive test coverage with 100% pass rate across all test suites.
 
 ## Test Architecture
 
 ### Testing Framework Stack
 
-- **JUnit 5.10.1** (Jupiter) - Core testing framework
-- **Mockito 5.8.0** - Mocking framework for unit tests
+- **JUnit 5.11.0** (Jupiter) - Core testing framework
+- **Mockito 5.11.0** - Mocking framework for unit tests
 - **AssertJ 3.25.1** - Fluent assertion library
 - **MockWebServer** - HTTP server mocking for API integration tests
 
@@ -92,7 +92,7 @@ Located in `src/test/resources/test.properties`:
 - **Assertions**: Service instance is not null and correct type
 
 #### testSendMessageWithValidApiKey()
-- **Purpose**: Test successful API communication with OpenAI
+- **Purpose**: Test successful API communication with Cursor API
 - **Setup**: 
   - Sets API key via system property
   - Configures mock server with valid JSON response
@@ -242,19 +242,28 @@ assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue()
 
 ## Continuous Integration
 
-### GitHub Actions (Future)
+### GitHub Actions CI/CD
 ```yaml
-name: Tests
+name: CI
 on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [IC, IU]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
         with:
-          java-version: '17'
-      - run: ./gradlew test
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - run: ./gradlew test --stacktrace --no-daemon --continue
+        env:
+          ORG_GRADLE_PROJECT_platformType: ${{ matrix.platform }}
 ```
 
 ## Test Maintenance

@@ -3,6 +3,7 @@ package io.threethirtythree.plugin.actions
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.diagnostic.Logger
 
 /**
  * IntelliJ IDEA action that opens the Cursor AI tool window for interactive chat.
@@ -46,6 +47,10 @@ import com.intellij.openapi.wm.ToolWindowManager
  * @see com.intellij.openapi.actionSystem.AnAction
  */
 class OpenCursorAIAction : AnAction() {
+    companion object {
+        private val LOG = Logger.getInstance(OpenCursorAIAction::class.java)
+    }
+
     @Throws(IllegalStateException::class)
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
@@ -54,12 +59,11 @@ class OpenCursorAIAction : AnAction() {
         val toolWindow = toolWindowManager.getToolWindow("Cursor AI")
         try {
             toolWindow?.show(null) ?: run {
-                println("Cursor AI tool window not found.")
+                LOG.warn("Cursor AI tool window not found.")
                 throw IllegalStateException("Cursor AI tool window not found.")
             }
         } catch (ex: Exception) {
-            // Log or handle the exception as needed
-            println("Error showing Cursor AI tool window: ${ex.message}")
+            LOG.error("Error showing Cursor AI tool window", ex)
         }
     }
 

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  * - Error handling for missing API keys
  * - Error handling for invalid API keys
  *
- * Note: This test requires a valid OpenAI API key to be set in the environment
+ * Note: This test requires a valid Cursor API key to be set in the environment
  * or system properties. Set one of the following:
  * - Environment variable: CURSOR_API_KEY
  *
@@ -91,7 +91,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
     fun testGetApiKeyTrimsWhitespace() {
         // Given
         val testApiKey = "  test-api-key-with-spaces  "
-        setSystemProperty("openai.api.key", testApiKey)
+        setSystemProperty("cursor.api.key", testApiKey)
 
         // When
         val apiKey = service.getApiKey()
@@ -134,7 +134,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
         // Then
         assertTrue(latch.await(5, TimeUnit.SECONDS))
         assertTrue(errorMessage.isNotEmpty())
-        assertTrue(errorMessage.first()!!.contains("OpenAI API key not found"))
+        assertTrue(errorMessage.first()!!.contains("Cursor API key not found"))
     }
 
     @Test
@@ -186,7 +186,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
     }
 
     /**
-     * Integration test that requires a valid OpenAI API key.
+     * Integration test that requires a valid Cursor API key.
      * This test will be skipped if no valid API key is available.
      */
     @Test
@@ -196,7 +196,7 @@ class CompletionsChatAsyncServiceIntegrationTest {
         val apiKey = System.getenv("CURSOR_API_KEY")
 
         if (apiKey.isNullOrBlank() || apiKey.startsWith("test-") || apiKey == "test-key") {
-            println("Skipping integration test - no valid OpenAI API key found")
+            println("Skipping integration test - no valid Cursor API key found")
             return
         }
 

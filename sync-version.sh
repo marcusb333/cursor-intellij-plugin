@@ -78,6 +78,10 @@ update_version_in_file "PROJECT_SUMMARY.md" "s/cursor-intellij-plugin-[0-9]\+\.[
 print_status "Updating README.md..."
 update_version_in_file "README.md" "s/### Version [0-9]\+\.[0-9]\+\.[0-9]\+ (Current)/### Version $PLUGIN_VERSION (Current)/g"
 
+# Update CHANGELOG.md
+print_status "Updating CHANGELOG.md..."
+update_version_in_file "CHANGELOG.md" "s/## \[Unreleased\]/## \[$PLUGIN_VERSION\] - $(date +%Y-%m-%d)\n\n## \[Unreleased\]/g"
+
 # Clean up backup files
 print_status "Cleaning up backup files..."
 rm -f *.bak
@@ -88,9 +92,10 @@ print_status "All files now reference version: $PLUGIN_VERSION"
 # Show what was updated
 echo ""
 print_status "Updated files:"
-echo "  - build.gradle"
+echo "  - build.gradle.kts"
 echo "  - build.sh"
 echo "  - PROJECT_SUMMARY.md"
 echo "  - README.md"
+echo "  - CHANGELOG.md"
 echo ""
 print_status "To update the version, edit src/main/resources/META-INF/plugin.xml and run this script again."

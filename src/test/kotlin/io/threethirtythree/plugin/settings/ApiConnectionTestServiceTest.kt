@@ -12,17 +12,17 @@ class ApiConnectionTestServiceTest {
 
     @Test
     fun testConnectionWithNullApiKey() {
-        val result = testService.testConnection(null, "https://api.openai.com/v1", 30)
+        val result = testService.testConnection(null, "https://api.cursor.com/v1", 30)
 
         assertFalse(result.success)
         assertEquals("API key is not configured", result.message)
         assertNotNull(result.errorDetails)
-        assertTrue(result.errorDetails!!.contains("Please enter your OpenAI API key"))
+        assertTrue(result.errorDetails!!.contains("Please enter your Cursor API key"))
     }
 
     @Test
     fun testConnectionWithEmptyApiKey() {
-        val result = testService.testConnection("", "https://api.openai.com/v1", 30)
+        val result = testService.testConnection("", "https://api.cursor.com/v1", 30)
 
         assertFalse(result.success)
         assertEquals("API key is not configured", result.message)
@@ -75,7 +75,7 @@ class ApiConnectionTestServiceTest {
     @Test
     fun testTimeoutHandling() {
         // Test with very short timeout (likely to fail)
-        val result = testService.testConnection("sk-test123", "https://api.openai.com/v1", 1)
+        val result = testService.testConnection("sk-test123", "https://api.cursor.com/v1", 1)
 
         // Should either timeout or fail authentication
         assertFalse(result.success)
