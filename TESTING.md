@@ -325,7 +325,7 @@ class NewFeatureTest {
 
 ```kotlin
 // Enable debug logging
-System.setProperty("com.cursor.plugin.debug", "true")
+System.setProperty("io.threethirtythree.plugin.debug", "true")
 
 // Add debug output
 println("Request: ${mockServer.takeRequest()}")
