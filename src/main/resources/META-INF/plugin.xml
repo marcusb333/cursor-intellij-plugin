@@ -86,6 +86,9 @@
         <!-- Settings State Service -->
         <applicationService serviceImplementation="io.threethirtythree.plugin.settings.CursorSettingsState"/>
         
+        <!-- Chat History Service (project-level) -->
+        <projectService serviceImplementation="io.threethirtythree.plugin.chat.ChatHistoryService"/>
+        
         <!-- Settings Configurable -->
         <applicationConfigurable 
                 id="cursor.settings"
@@ -114,6 +117,20 @@
                 class="io.threethirtythree.plugin.actions.ExplainCodeAction" 
                 text="Explain Code with Cursor" 
                 description="Get explanation for selected code">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        
+        <action id="io.threethirtythree.plugin.FixCode"
+                class="io.threethirtythree.plugin.actions.FixCodeAction" 
+                text="Fix Code with Cursor" 
+                description="Identify bugs and get fix suggestions for selected code">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        
+        <action id="io.threethirtythree.plugin.RefactorCode"
+                class="io.threethirtythree.plugin.actions.RefactorCodeAction" 
+                text="Refactor Code with Cursor" 
+                description="Refactor selected code using AI">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
     </actions>

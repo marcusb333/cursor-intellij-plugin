@@ -1,6 +1,5 @@
 package io.threethirtythree.plugin.ui
 
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.Gray
@@ -17,6 +16,8 @@ import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import javax.swing.JButton
@@ -90,13 +91,16 @@ class CursorChatPanel private constructor(
     private val inputField: JBTextField
     private val sendButton: JButton
     private val clearButton: JButton
+    private val copyButton: JButton
 
     // Coroutine scope for managing async operations
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val aiService: io.threethirtythree.plugin.service.CompletionsChatAsyncService
+    private val chatHistoryService: io.threethirtythree.plugin.chat.ChatHistoryService
 
     init {
         this.aiService = io.threethirtythree.plugin.service.CompletionsChatAsyncService.getInstance(project)
+        this.chatHistoryService = io.threethirtythree.plugin.chat.ChatHistoryService.getInstance(project)
 
         layout = BorderLayout()
         border = JBUI.Borders.empty(10)
@@ -142,11 +146,28 @@ class CursorChatPanel private constructor(
                 addActionListener {
                     chatArea.text = ""
                     inputField.text = ""
+                    chatHistoryService.chatText = ""
+                }
+            }
+
+        copyButton =
+            JButton("Copy").apply {
+                preferredSize = Dimension(80, 30)
+                toolTipText = "Copy chat content to clipboard"
+                addActionListener {
+                    val textToCopy = chatArea.selectedText ?: chatArea.text
+                    if (textToCopy.isNotEmpty()) {
+                        Toolkit.getDefaultToolkit().systemClipboard.setContents(
+                            StringSelection(textToCopy),
+                            null,
+                        )
+                    }
                 }
             }
 
         val buttonPanel =
             JPanel(FlowLayout(FlowLayout.RIGHT, 5, 0)).apply {
+                add(copyButton)
                 add(clearButton)
                 add(sendButton)
             }
@@ -158,45 +179,29 @@ class CursorChatPanel private constructor(
         add(scrollPane, BorderLayout.CENTER)
         add(inputPanel, BorderLayout.SOUTH)
 
-        // Add welcome message
-        appendToChat("🤖 Welcome to Cursor AI Assistant!\n")
-        appendToChat("Type your questions or requests below. I can help with:\n")
-        appendToChat("• Code generation and suggestions\n")
-        appendToChat("• Code explanation and documentation\n")
-        appendToChat("• Bug fixes and optimizations\n")
-        appendToChat("• General programming questions\n\n")
+        // Load persisted history or show welcome message
+        val savedHistory = chatHistoryService.chatText
+        if (savedHistory.isNotBlank()) {
+            chatArea.text = savedHistory
+            chatArea.caretPosition = chatArea.document.length
+        } else {
+            appendToChat("🤖 Welcome to Cursor AI Assistant!\n")
+            appendToChat("Type your questions or requests below. I can help with:\n")
+            appendToChat("• Code generation and suggestions\n")
+            appendToChat("• Code explanation and documentation\n")
+            appendToChat("• Bug fixes and optimizations\n")
+            appendToChat("• General programming questions\n\n")
+        }
     }
 
-    private fun appendToChat(text: String) {
+    private fun appendToChat(text: String, persist: Boolean = true) {
         SwingUtilities.invokeLater {
             chatArea.append(text)
             chatArea.caretPosition = chatArea.document.length
+            if (persist) {
+                chatHistoryService.chatText = chatArea.text
+            }
         }
-    }
-
-    private fun getCurrentContext(): String {
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        if (editor == null) {
-            return "No file currently open"
-        }
-
-        val selectionModel = editor.selectionModel
-        val selectedText = selectionModel.selectedText
-
-        if (!selectedText.isNullOrBlank()) {
-            return "Selected code:\n$selectedText"
-        }
-
-        // Get current line or surrounding context
-        val offset = editor.caretModel.offset
-        val documentText = editor.document.text
-
-        // Extract some context around the cursor
-        val start = maxOf(0, offset - 200)
-        val end = minOf(documentText.length, offset + 200)
-        val context = documentText.substring(start, end)
-
-        return "Current file context:\n$context"
     }
 
     private inner class SendMessageAction : ActionListener {
@@ -210,32 +215,43 @@ class CursorChatPanel private constructor(
             appendToChat("👤 You: $message\n\n")
             inputField.text = ""
 
-            // Get context
-            val context = getCurrentContext()
+            // Get rich context and build full prompt
+            val context = io.threethirtythree.plugin.context.ContextBuilder.buildContext(project)
+            val fullMessage = buildString {
+                append("Context:\n")
+                append(context)
+                append("\n\nUser question: ")
+                append(message)
+            }
 
             // Send to AI
             appendToChat("🤖 Cursor AI: ")
-            // Use callback-based approach
             val dummyAction = object : com.intellij.openapi.actionSystem.AnAction() {
                 override fun actionPerformed(e: com.intellij.openapi.actionSystem.AnActionEvent) {
                     // This is just a dummy action for the service call
                 }
             }
             
-            aiService.sendMessage(
-                message = message,
+            aiService.sendMessageStreaming(
+                message = fullMessage,
                 context = context,
                 action = dummyAction,
-                callback = object : io.threethirtythree.plugin.core.CursorAIResponseCallback {
+                callback = object : io.threethirtythree.plugin.core.CursorAIStreamingCallback {
+                    override fun onChunk(chunk: String) {
+                        SwingUtilities.invokeLater {
+                            appendToChat(chunk, persist = false)
+                        }
+                    }
+
                     override fun onSuccess(response: String) {
                         SwingUtilities.invokeLater {
-                            appendToChat("$response\n\n")
+                            appendToChat("\n\n", persist = true)
                         }
                     }
 
                     override fun onError(error: String) {
                         SwingUtilities.invokeLater {
-                            appendToChat("❌ Error: $error\n\n")
+                            appendToChat("❌ Error: $error\n\n", persist = true)
                         }
                     }
                 }
