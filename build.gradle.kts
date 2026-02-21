@@ -10,15 +10,17 @@ repositories {
     mavenCentral()
     intellijPlatform {
         defaultRepositories()
-        intellijDependencies()
     }
 }
 
 dependencies {
     intellijPlatform {
-        // Use a stable version of IntelliJ Platform
+        // Use create() with IC type for 2024.2 - multi-OS archive from Maven (installer resolution has issues)
         val platformVersion = providers.gradleProperty("platformVersion").getOrElse("2024.2")
-        intellijIdeaCommunity(platformVersion)
+        create(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaCommunity, platformVersion) {
+            useInstaller.set(false)
+        }
+        jetbrainsRuntime()  // Required when using multi-OS archives (useInstaller = false)
         
         // Bundled plugins required for testing
         bundledPlugin("com.intellij.java")
