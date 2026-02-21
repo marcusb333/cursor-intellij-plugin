@@ -12,7 +12,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -103,11 +107,12 @@ class CompletionsChatAsyncService(
         serviceScope.launch {
             try {
                 // Create the request body
+                val settings = CursorSettingsState.instance
                 val requestBody =
                     JsonObject().apply {
-                        addProperty("model", "gpt-3.5-turbo")
-                        addProperty("max_tokens", 1000)
-                        addProperty("temperature", 0.7)
+                        addProperty("model", settings.model.ifEmpty { CursorSettingsState.DEFAULT_MODEL })
+                        addProperty("max_tokens", settings.maxTokens.coerceIn(1, 128000))
+                        addProperty("temperature", settings.temperature.coerceIn(0.0, 2.0))
 
                         val messages = JsonArray()
                         val userMessage =
@@ -120,7 +125,6 @@ class CompletionsChatAsyncService(
                     }
 
                 // Create HTTP request
-                val settings = CursorSettingsState.instance
                 val apiEndpoint = settings.apiEndpoint
                 val timeout = settings.timeoutSeconds.toLong()
 
@@ -168,6 +172,143 @@ class CompletionsChatAsyncService(
             } catch (e: Exception) {
                 LOG.error("Unexpected error communicating with Cursor API", e)
                 callback.onError("Unexpected error: ${e.message ?: "Unknown error occurred"}")
+            }
+        }
+    }
+
+    /**
+     * Sends a message to the Cursor API with streaming response.
+     * Calls [CursorAIStreamingCallback.onChunk] for each piece of content as it arrives,
+     * and [CursorAIResponseCallback.onSuccess] with the full content when complete.
+     */
+    fun sendMessageStreaming(
+        message: String?,
+        context: String,
+        action: AnAction,
+        callback: io.threethirtythree.plugin.core.CursorAIStreamingCallback,
+    ) {
+        if (message.isNullOrBlank()) return
+
+        val apiKey = getApiKey()
+        if (apiKey.isNullOrEmpty()) {
+            LOG.warn("No API key found for Cursor API request")
+            val errorMessage =
+                "Cursor API key not found. Please configure it in:\n" +
+                    "1. Plugin Settings: File → Settings → Cursor AI\n" +
+                    "2. Or set environment variable: export CURSOR_API_KEY=your_key_here\n" +
+                    "For more details, see the plugin documentation."
+            callback.onError(errorMessage)
+            return
+        }
+
+        LOG.debug("Sending streaming message to Cursor API: ${message?.take(100)}...")
+
+        serviceScope.launch {
+            withContext(Dispatchers.IO) {
+                try {
+                    val settings = CursorSettingsState.instance
+                    val requestBody =
+                        JsonObject().apply {
+                            addProperty("model", settings.model.ifEmpty { CursorSettingsState.DEFAULT_MODEL })
+                            addProperty("max_tokens", settings.maxTokens.coerceIn(1, 128000))
+                            addProperty("temperature", settings.temperature.coerceIn(0.0, 2.0))
+                            addProperty("stream", true)
+
+                            val messages = JsonArray()
+                            val userMessage =
+                                JsonObject().apply {
+                                    addProperty("role", "user")
+                                    addProperty("content", message)
+                                }
+                            messages.add(userMessage)
+                            add("messages", messages)
+                        }
+
+                    val apiEndpoint = settings.apiEndpoint
+                    val timeout = settings.timeoutSeconds.toLong()
+
+                    val request =
+                        HttpRequest
+                            .newBuilder()
+                            .uri(URI.create("$apiEndpoint/chat/completions"))
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", "Bearer $apiKey")
+                            .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestBody)))
+                            .timeout(Duration.ofSeconds(timeout))
+                            .build()
+
+                    val response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream())
+
+                    if (response.statusCode() != 200) {
+                        val errorBody = BufferedReader(InputStreamReader(response.body(), StandardCharsets.UTF_8)).readText()
+                        LOG.error("Cursor API returned error status ${response.statusCode()}: $errorBody")
+                        withContext(Dispatchers.Main) {
+                            callback.onError("Cursor API error (${response.statusCode()}): ${errorBody.take(200)}")
+                        }
+                        return@withContext
+                    }
+
+                    val reader = BufferedReader(InputStreamReader(response.body(), StandardCharsets.UTF_8))
+                    val fullContent = StringBuilder()
+
+                    reader.useLines { lines ->
+                        for (line in lines) {
+                            if (line.startsWith("data: ")) {
+                                val data = line.removePrefix("data: ").trim()
+                                if (data == "[DONE]") break
+
+                                try {
+                                    val json = gson.fromJson(data, JsonObject::class.java)
+                                    val choices = json.getAsJsonArray("choices")
+                                    if (choices != null && choices.size() > 0) {
+                                        val firstChoice = choices.get(0).asJsonObject
+                                        val delta = firstChoice.getAsJsonObject("delta")
+                                        if (delta != null && delta.has("content")) {
+                                            val content = delta.get("content").asString
+                                            if (content != null && content.isNotEmpty()) {
+                                                fullContent.append(content)
+                                                withContext(Dispatchers.Main) {
+                                                    callback.onChunk(content)
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    LOG.debug("Failed to parse SSE chunk: $data", e)
+                                }
+                            }
+                        }
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        callback.onSuccess(fullContent.toString())
+                    }
+                } catch (e: ConnectException) {
+                    LOG.error("Failed to connect to Cursor API", e)
+                    withContext(Dispatchers.Main) {
+                        callback.onError("Unable to connect to Cursor API. Please check your internet connection and try again.")
+                    }
+                } catch (e: SocketTimeoutException) {
+                    LOG.error("Request timeout when calling Cursor API", e)
+                    withContext(Dispatchers.Main) {
+                        callback.onError("Request timed out. The API may be slow or unavailable. Please try again.")
+                    }
+                } catch (e: HttpTimeoutException) {
+                    LOG.error("HTTP timeout when calling Cursor API", e)
+                    withContext(Dispatchers.Main) {
+                        callback.onError("Request timed out. Please check your connection and try again.")
+                    }
+                } catch (e: SecurityException) {
+                    LOG.error("Security exception when calling Cursor API", e)
+                    withContext(Dispatchers.Main) {
+                        callback.onError("Security error occurred. Please check your API key and permissions.")
+                    }
+                } catch (e: Exception) {
+                    LOG.error("Unexpected error communicating with Cursor API", e)
+                    withContext(Dispatchers.Main) {
+                        callback.onError("Unexpected error: ${e.message ?: "Unknown error occurred"}")
+                    }
+                }
             }
         }
     }

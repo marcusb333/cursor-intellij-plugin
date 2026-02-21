@@ -23,7 +23,12 @@ class ApiConnectionTestService {
         val errorDetails: String? = null
     )
     
-    fun testConnection(apiKey: String?, endpoint: String, timeoutSeconds: Int): TestResult {
+    fun testConnection(
+        apiKey: String?,
+        endpoint: String,
+        timeoutSeconds: Int,
+        model: String = "gpt-3.5-turbo",
+    ): TestResult {
         if (apiKey.isNullOrBlank()) {
             return TestResult(
                 success = false,
@@ -43,7 +48,7 @@ class ApiConnectionTestService {
             
             // Use a minimal chat completion request to test the Cursor API
             val requestBody = JsonObject().apply {
-                addProperty("model", "gpt-3.5-turbo")
+                addProperty("model", model)
                 add("messages", gson.toJsonTree(listOf(
                     mapOf(
                         "role" to "user",

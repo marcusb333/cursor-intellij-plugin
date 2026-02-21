@@ -20,6 +20,9 @@ class CursorSettingsState : PersistentStateComponent<CursorSettingsState> {
     
     // Non-sensitive settings stored in XML
     var apiEndpoint: String = DEFAULT_API_ENDPOINT
+    var model: String = DEFAULT_MODEL
+    var maxTokens: Int = DEFAULT_MAX_TOKENS
+    var temperature: Double = DEFAULT_TEMPERATURE
     var timeoutSeconds: Int = DEFAULT_TIMEOUT_SECONDS
     var lastConnectionTestTime: Long = 0
     var lastConnectionTestSuccess: Boolean = false
@@ -27,7 +30,21 @@ class CursorSettingsState : PersistentStateComponent<CursorSettingsState> {
     
     companion object {
         const val DEFAULT_API_ENDPOINT = "https://api.cursor.com/v1"
+        const val DEFAULT_MODEL = "gpt-3.5-turbo"
+        const val DEFAULT_MAX_TOKENS = 1000
+        const val DEFAULT_TEMPERATURE = 0.7
         const val DEFAULT_TIMEOUT_SECONDS = 30
+
+        /** Common Cursor API model IDs (OpenAI-compatible) */
+        val AVAILABLE_MODELS: Array<String> = arrayOf(
+            "gpt-3.5-turbo",
+            "gpt-4",
+            "gpt-4-turbo",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "claude-3-5-sonnet-20241022",
+            "claude-3-opus-20240229",
+        )
         private const val API_KEY_SERVICE_NAME = "CursorPlugin"
         private const val API_KEY_USERNAME = "apiKey"
         
@@ -99,6 +116,9 @@ class CursorSettingsState : PersistentStateComponent<CursorSettingsState> {
      */
     fun resetToDefaults() {
         apiEndpoint = DEFAULT_API_ENDPOINT
+        model = DEFAULT_MODEL
+        maxTokens = DEFAULT_MAX_TOKENS
+        temperature = DEFAULT_TEMPERATURE
         timeoutSeconds = DEFAULT_TIMEOUT_SECONDS
         lastConnectionTestTime = 0
         lastConnectionTestSuccess = false

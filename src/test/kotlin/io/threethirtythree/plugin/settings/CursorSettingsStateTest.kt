@@ -21,6 +21,9 @@ class CursorSettingsStateTest {
     @Test
     fun testDefaultValues() {
         assertEquals(CursorSettingsState.DEFAULT_API_ENDPOINT, settings.apiEndpoint)
+        assertEquals(CursorSettingsState.DEFAULT_MODEL, settings.model)
+        assertEquals(CursorSettingsState.DEFAULT_MAX_TOKENS, settings.maxTokens)
+        assertEquals(CursorSettingsState.DEFAULT_TEMPERATURE, settings.temperature)
         assertEquals(CursorSettingsState.DEFAULT_TIMEOUT_SECONDS, settings.timeoutSeconds)
         assertFalse(settings.lastConnectionTestSuccess)
         assertEquals("", settings.lastConnectionTestMessage)
@@ -70,6 +73,9 @@ class CursorSettingsStateTest {
     fun testResetToDefaults() {
         // Modify settings
         settings.apiEndpoint = "https://custom.api.com"
+        settings.model = "gpt-4"
+        settings.maxTokens = 2000
+        settings.temperature = 0.5
         settings.timeoutSeconds = 60
         settings.updateConnectionTestResults(true, "Test message")
         
@@ -78,6 +84,9 @@ class CursorSettingsStateTest {
         
         // Verify defaults restored
         assertEquals(CursorSettingsState.DEFAULT_API_ENDPOINT, settings.apiEndpoint)
+        assertEquals(CursorSettingsState.DEFAULT_MODEL, settings.model)
+        assertEquals(CursorSettingsState.DEFAULT_MAX_TOKENS, settings.maxTokens)
+        assertEquals(CursorSettingsState.DEFAULT_TEMPERATURE, settings.temperature)
         assertEquals(CursorSettingsState.DEFAULT_TIMEOUT_SECONDS, settings.timeoutSeconds)
         assertEquals(0L, settings.lastConnectionTestTime)
         assertFalse(settings.lastConnectionTestSuccess)
@@ -105,6 +114,9 @@ class CursorSettingsStateTest {
     @Test
     fun testStateSerializationWithXmlSerializer() {
         settings.apiEndpoint = "https://test.api.com"
+        settings.model = "gpt-4"
+        settings.maxTokens = 2000
+        settings.temperature = 0.5
         settings.timeoutSeconds = 45
         settings.lastConnectionTestTime = 123456789L
         settings.lastConnectionTestSuccess = true
@@ -116,6 +128,9 @@ class CursorSettingsStateTest {
         
         // Verify state was loaded correctly
         assertEquals(settings.apiEndpoint, loadedSettings.apiEndpoint)
+        assertEquals(settings.model, loadedSettings.model)
+        assertEquals(settings.maxTokens, loadedSettings.maxTokens)
+        assertEquals(settings.temperature, loadedSettings.temperature)
         assertEquals(settings.timeoutSeconds, loadedSettings.timeoutSeconds)
         assertEquals(settings.lastConnectionTestTime, loadedSettings.lastConnectionTestTime)
         assertEquals(settings.lastConnectionTestSuccess, loadedSettings.lastConnectionTestSuccess)

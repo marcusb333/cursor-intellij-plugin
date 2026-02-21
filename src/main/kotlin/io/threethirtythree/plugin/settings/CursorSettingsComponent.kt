@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import javax.swing.JButton
 import javax.swing.JCheckBox
+import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JOptionPane
 import javax.swing.JPanel
@@ -34,7 +35,10 @@ class CursorSettingsComponent {
     private val testConnectionButton = JButton("Test Connection")
     private val connectionStatusLabel = JBLabel()
     private val connectionDetailsArea = JTextArea(3, 0)
+    private val modelComboBox = JComboBox(CursorSettingsState.AVAILABLE_MODELS).apply { isEditable = true }
     private val apiEndpointField = JBTextField()
+    private val maxTokensField = JBTextField()
+    private val temperatureField = JBTextField()
     private val timeoutField = JBTextField()
     private val resetButton = JButton("Reset to Defaults")
 
@@ -52,14 +56,20 @@ class CursorSettingsComponent {
     fun isModified(): Boolean {
         val settings = CursorSettingsState.instance
         return (settings.getApiKey() ?: "") != String(apiKeyField.password) ||
+            settings.model != modelComboBox.selectedItem?.toString() ||
             settings.apiEndpoint != apiEndpointField.text ||
+            settings.maxTokens != maxTokensField.text.toIntOrNull() ||
+            settings.temperature != temperatureField.text.toDoubleOrNull() ||
             settings.timeoutSeconds != timeoutField.text.toIntOrNull()
     }
 
     fun apply() {
         val settings = CursorSettingsState.instance
         settings.setApiKey(String(apiKeyField.password))
+        settings.model = modelComboBox.selectedItem?.toString() ?: CursorSettingsState.DEFAULT_MODEL
         settings.apiEndpoint = apiEndpointField.text
+        settings.maxTokens = maxTokensField.text.toIntOrNull() ?: CursorSettingsState.DEFAULT_MAX_TOKENS
+        settings.temperature = temperatureField.text.toDoubleOrNull() ?: CursorSettingsState.DEFAULT_TEMPERATURE
         settings.timeoutSeconds = timeoutField.text.toIntOrNull() ?: CursorSettingsState.DEFAULT_TIMEOUT_SECONDS
     }
 
@@ -102,16 +112,49 @@ class CursorSettingsComponent {
                         insets = JBUI.insets(5)
                     }
 
+                // Model
+                add(JBLabel("Model:"), gbc)
+                gbc.gridx = 1
+                gbc.fill = GridBagConstraints.HORIZONTAL
+                gbc.weightx = 1.0
+                add(modelComboBox, gbc)
+
                 // API Endpoint
+                gbc.gridx = 0
+                gbc.gridy = 1
+                gbc.fill = GridBagConstraints.NONE
+                gbc.weightx = 0.0
                 add(JBLabel("API Endpoint:"), gbc)
                 gbc.gridx = 1
                 gbc.fill = GridBagConstraints.HORIZONTAL
                 gbc.weightx = 1.0
                 add(apiEndpointField, gbc)
 
+                // Max Tokens
+                gbc.gridx = 0
+                gbc.gridy = 2
+                gbc.fill = GridBagConstraints.NONE
+                gbc.weightx = 0.0
+                add(JBLabel("Max Tokens:"), gbc)
+                gbc.gridx = 1
+                gbc.fill = GridBagConstraints.HORIZONTAL
+                gbc.weightx = 1.0
+                add(maxTokensField, gbc)
+
+                // Temperature
+                gbc.gridx = 0
+                gbc.gridy = 3
+                gbc.fill = GridBagConstraints.NONE
+                gbc.weightx = 0.0
+                add(JBLabel("Temperature (0-2):"), gbc)
+                gbc.gridx = 1
+                gbc.fill = GridBagConstraints.HORIZONTAL
+                gbc.weightx = 1.0
+                add(temperatureField, gbc)
+
                 // Timeout
                 gbc.gridx = 0
-                gbc.gridy = 1
+                gbc.gridy = 4
                 gbc.fill = GridBagConstraints.NONE
                 gbc.weightx = 0.0
                 add(JBLabel("Timeout (seconds):"), gbc)
@@ -166,11 +209,25 @@ class CursorSettingsComponent {
             }
         }
 
-        // Validate timeout field
+        // Validate numeric fields
         timeoutField.document.addDocumentListener(
             object : DocumentAdapter() {
                 override fun textChanged(e: DocumentEvent) {
                     validateTimeoutField()
+                }
+            },
+        )
+        maxTokensField.document.addDocumentListener(
+            object : DocumentAdapter() {
+                override fun textChanged(e: DocumentEvent) {
+                    validateMaxTokensField()
+                }
+            },
+        )
+        temperatureField.document.addDocumentListener(
+            object : DocumentAdapter() {
+                override fun textChanged(e: DocumentEvent) {
+                    validateTemperatureField()
                 }
             },
         )
@@ -179,7 +236,10 @@ class CursorSettingsComponent {
     private fun loadCurrentSettings() {
         val settings = CursorSettingsState.instance
         apiKeyField.text = settings.getApiKey() ?: ""
+        modelComboBox.selectedItem = settings.model.ifEmpty { CursorSettingsState.DEFAULT_MODEL }
         apiEndpointField.text = settings.apiEndpoint
+        maxTokensField.text = settings.maxTokens.toString()
+        temperatureField.text = settings.temperature.toString()
         timeoutField.text = settings.timeoutSeconds.toString()
 
         // Update connection status if available
@@ -206,9 +266,11 @@ class CursorSettingsComponent {
         val tempEndpoint = apiEndpointField.text
         val tempTimeout = timeoutField.text.toIntOrNull() ?: CursorSettingsState.DEFAULT_TIMEOUT_SECONDS
 
+        val tempModel = modelComboBox.selectedItem?.toString() ?: CursorSettingsState.DEFAULT_MODEL
+
         ApplicationManager.getApplication().executeOnPooledThread {
             val testService = ApiConnectionTestService()
-            val result = testService.testConnection(tempApiKey, tempEndpoint, tempTimeout)
+            val result = testService.testConnection(tempApiKey, tempEndpoint, tempTimeout, tempModel)
 
             SwingUtilities.invokeLater {
                 isTestingConnection = false
@@ -274,6 +336,44 @@ class CursorSettingsComponent {
             }
             else -> {
                 timeoutField.putClientProperty("JComponent.outline", null)
+                true
+            }
+        }
+    }
+
+    private fun validateMaxTokensField(): Boolean {
+        val text = maxTokensField.text
+        val value = text.toIntOrNull()
+        return when {
+            text.isBlank() -> {
+                maxTokensField.putClientProperty("JComponent.outline", null)
+                true
+            }
+            value == null || value < 1 || value > 128000 -> {
+                maxTokensField.putClientProperty("JComponent.outline", "error")
+                false
+            }
+            else -> {
+                maxTokensField.putClientProperty("JComponent.outline", null)
+                true
+            }
+        }
+    }
+
+    private fun validateTemperatureField(): Boolean {
+        val text = temperatureField.text
+        val value = text.toDoubleOrNull()
+        return when {
+            text.isBlank() -> {
+                temperatureField.putClientProperty("JComponent.outline", null)
+                true
+            }
+            value == null || value < 0.0 || value > 2.0 -> {
+                temperatureField.putClientProperty("JComponent.outline", "error")
+                false
+            }
+            else -> {
+                temperatureField.putClientProperty("JComponent.outline", null)
                 true
             }
         }
